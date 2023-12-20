@@ -10,54 +10,34 @@ import { SerialPort } from 'serialport';
 import { NONE_TYPE } from '@angular/compiler';
 import * as path from 'path';
 import { ArduinoService } from './core/services/arduino/arduino.service';
+import { RealTimeDataService}  from './core/services/prueba/real-time-data.service'
+
 
 
 @Component({
   selector: 'app-root',
-  templateUrl: './app.component.html',
+  template: `
+    <div>
+      <h1>Datos en tiempo real:</h1>
+      <p>{{ realTimeData }}</p>
+    </div>
+  `,
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit{
-  private arduino1 : any;
-  private arduino2 : any;
-  private parser1 : any;
-  private parser2 : any;
-  private messages_from_device! : [{}];
-  private messages_to_device! : [{}];
-  private on_status_changed : any;
-  private _device : any;
-  private message! : [{}];
-  private data : any;
-  private manual_settings : Boolean = false;
-  private mode = 0;
-  private connected : boolean = false;
-  private is_running : boolean = false;
-  private sensors! : [];
+  realTimeData!: number;
 
- 
+  constructor(private realTimeDataService: RealTimeDataService) {}
 
+  ngOnInit() {
+    this.realTimeDataService.data$.subscribe((data:any) => {
+      this.realTimeData = data;
+    });
 
-  constructor(
-    private arduinoService : ArduinoService,
-    private translate: TranslateService,
-  ) {
- /*    this.on_status_changed = callback
-    this.name = name
-    this.manual_setting = manual_setting
-
-    if (manual_setting){
-      this.sensors = sensors
-      this.mode = mode1
-
-    this.port = port
-    this.baudrate = baudrate
-    this._device = NONE_TYPE
-    this.connect()
-    }
- */
-  }
-
-  ngOnInit(){
-   
+    // Simular cambios en tiempo real (esto es solo para demostración)
+    setInterval(() => {
+      const newValue = Math.floor(Math.random() * 100); // Valor aleatorio para simular cambios
+      this.realTimeDataService.updateRealTimeData(newValue);
+    }, 2000); // Cambia cada 2 segundos (simulación)
   }
 }

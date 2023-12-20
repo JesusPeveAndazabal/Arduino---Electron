@@ -13,7 +13,7 @@ export class ArduinoService {
   /* arduino2! : ArduinoDevice; */
 
   constructor( private electronService: ElectronService,) {
-    this.arduino1 = new ArduinoDevice("COM23",115200,true,electronService);
+    //this.arduino1 = new ArduinoDevice("COM23",115200,true,electronService);
    /*  this.arduino2 = new ArduinoDevice("COM4",9600,true,electronService); */
   }
 }
