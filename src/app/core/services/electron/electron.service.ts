@@ -6,6 +6,8 @@ import { ipcRenderer, webFrame } from 'electron';
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
 
+import * as SerialPort from 'serialport';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -14,10 +16,13 @@ export class ElectronService {
   webFrame!: typeof webFrame;
   childProcess!: typeof childProcess;
   fs!: typeof fs;
+  serialPort!: typeof SerialPort;
 
   constructor() {
     // Conditional imports
     if (this.isElectron) {
+
+      this.serialPort = window.require('serialport');
       this.ipcRenderer = (window as any).require('electron').ipcRenderer;
       this.webFrame = (window as any).require('electron').webFrame;
 
