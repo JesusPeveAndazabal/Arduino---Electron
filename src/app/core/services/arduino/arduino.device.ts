@@ -3,7 +3,11 @@ import { Injectable } from '@angular/core';
 import { SerialPort} from 'serialport'; 
 import { ReadlineParser } from '@serialport/parser-readline'
 import { ElectronService } from '../electron/electron.service';
-import { Sensor } from '../../utils/global'; 
+import { Sensor } from '../../utils/global';
+import { ArduinoService } from './arduino.service';
+
+//Importacion del observable para el uso de las funciones reactivas para obtener los datos de los sensores
+import { Observable, Subject } from 'rxjs'; 
 
 export class ArduinoDevice {
   private isRunning: boolean = false;
@@ -12,17 +16,34 @@ export class ArduinoDevice {
   private mode: number = 0;
   private port: any;
   private message_to_device : string[] = [];
-  private message_from_device : any[] = [];
+  private message_from_device: Map<Sensor, number> = new Map();
   private messageInterval: any;
   private SensorWatterflow: any;
   private SensorVolumen:any;
+  private on_status_changed: any;
+
+  private isReconnecting: boolean = false;
+
+  //Creamos un sujeto (Subject) por cada sensor
+  private sensorSubjectMap: Map<Sensor, Subject<number>> = new Map();
+
+  private sensorWatterFlowSubject: Subject<number> = new Subject<number>();
+  private sensorVolumeSubject: Subject<number> = new Subject<number>();
+
 
   constructor(
     public path: string,public baudrate: number,public autoOpen: boolean,
     private electronService: ElectronService,
+    private arduinoService: ArduinoService,
   ) { 
       this.connectToDevice(path, baudrate,autoOpen);
+      this.setupSensorSubjects();
+  }
 
+  private setupSensorSubjects(): void {
+    // Asigna cada Subject específico a su tipo de sensor correspondiente
+  
+    this.sensorSubjectMap.set(Sensor.VOLUME, this.sensorVolumeSubject);
   }
 
   private connectToDevice(port: string, baudrate: number,autoOpen : boolean): void {
@@ -30,9 +51,26 @@ export class ArduinoDevice {
       this.port = new this.electronService.serialPort.SerialPort({ path: port , baudRate: baudrate,autoOpen : autoOpen});
 
       // Agrega el parser readline para facilitar la lectura de líneas
+      // Método para manejar la reconexión en caso de desconexión
+      const handleReconnect = () => {
+        if (!this.isReconnecting) {
+          this.isReconnecting = true;
+          console.log('Arduino disconnected. Reconnecting...');
+          
+          // Intentar reconectar después de un breve período
+          setTimeout(() => {
+            this.connectToDevice(port, baudrate, autoOpen);
+            this.isReconnecting = false;
+            //console.log('Connected to Arduino');
+          }, 7000); 
+        }
+      };
+
+      // Manejar eventos de conexión y desconexión
+      this.port.on('close', handleReconnect);
+      this.port.on('error', handleReconnect);
       
       
-      console.log('Connected to Arduino');
 
       //variable para instanciar el this dentro de una funcion : clearInterval()
       let instance = this;
@@ -61,14 +99,11 @@ export class ArduinoDevice {
         }else if(instance.manualSetting){
           instance.isRunning = true;
         }
-
       },1000);
-
     } catch (error) {
       console.error('Error connecting to Arduino:', error);
     }
   }
-
 
   private listenToDevice(parser: any): void {
     parser.on('data', (data: string) => {
@@ -76,24 +111,36 @@ export class ArduinoDevice {
       // Assuming values represent sensor readings
       //console.log(values);
       values.forEach((value : string, index : number) => {
-        this.message_from_device[`${this.sensors[index]}`] = parseFloat(value);
-        this.SensorWatterflow = this.message_from_device[`${2}`]
-        this.SensorVolumen = this.message_from_device[`${5}`]
-        console.log("Lectura del sensor de watterflow" , this.SensorWatterflow);
-        console.log("Lectura del sensor de volumen" , this.SensorVolumen);
+        //Sensor id es igual a sensor type
+        const sensorId = this.sensors[index];
+        //El valor de cada sensor
+        const numericValue = parseFloat(value);
+
+        //Sensor type = 2/5
+        const sensorType = sensorId;
+
+        //console.log("numericValue: " + numericValue);
+        //console.log("sensorType: " + sensorType);
+        
+        if(this.sensorSubjectMap.has(sensorType)){
+          this.sensorSubjectMap.get(sensorType)!.next(numericValue);
+        }
+        this.message_from_device.set(sensorType, numericValue);
+  
+        /* if(sensorId == Sensor.WATER_FLOW){
+          const sensorWatterFlow = this.message_from_device.get(Sensor.WATER_FLOW);
+          //console.log("Sensor Watterflow : " , sensorWatterFlow);
+        }
+        else if(sensorId == Sensor.VOLUME){
+          const sensorVolume = this.message_from_device.get(Sensor.VOLUME);
+          //console.log("Sensor Volume : " , sensorVolume);
+        } */
+        //this.message_from_device[`${this.sensors[index]}`] = parseFloat(value);
+
+        this.arduinoService.notifySensorValue(sensorType, numericValue);
       });
       console.log('Received message from Arduino:', this.message_from_device);
     });
-  }
-
-  private getSensorWatterFlow(watterFlow:number){
-    watterFlow = this.sensors[`${Sensor.WATER_FLOW}`];
-    return watterFlow;
-  }
-
-  private getSensorVolumen(){
-    let volumen = this.sensors[`${Sensor.VOLUME}`];
-    return volumen;
   }
 
   public sendCommand(command: string): void {
@@ -106,6 +153,13 @@ export class ArduinoDevice {
         }
       });
     }
+  }
+
+  public getSensorObservable(sensorType: Sensor): Observable<number> {
+    if (!this.sensorSubjectMap.has(sensorType)) {
+      this.sensorSubjectMap.set(sensorType, new Subject<number>());
+    }
+    return this.sensorSubjectMap.get(sensorType)!.asObservable();
   }
 
   // Add other methods as needed based on your requirements
@@ -121,4 +175,5 @@ export class ArduinoDevice {
       });
     }
   }
+
 }

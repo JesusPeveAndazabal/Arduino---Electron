@@ -11,33 +11,46 @@ import { NONE_TYPE } from '@angular/compiler';
 import * as path from 'path';
 import { ArduinoService } from './core/services/arduino/arduino.service';
 import { RealTimeDataService}  from './core/services/prueba/real-time-data.service'
-
-
+import { Subscription } from 'rxjs';
+import { ArduinoDevice } from './core/services/arduino/arduino.device'; 
+import { Sensor } from './core/utils/global';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-root',
-  template: `
-    <div>
-      <h1>Datos en tiempo real:</h1>
-      <p>{{ realTimeData }}</p>
-    </div>
-  `,
+  template: `<div *ngIf="valorDelSensor1 !== undefined">Valor del sensor Watterflow: {{ valorDelSensor1 }}</div>
+            <div *ngIf="valorDelSensor2 !== undefined">Valor del sensor Volumen: {{ valorDelSensor2 }}</div>`,
   styleUrls: ['./app.component.scss']
 })
+
 export class AppComponent implements OnInit{
-  realTimeData!: number;
+  valorDelSensor1: number | undefined; 
+  valorDelSensor2: number | undefined; 
+  private sensorSubscription: Subscription | undefined;
 
-  constructor(private realTimeDataService: RealTimeDataService) {}
-
+  constructor(private arduinoService : ArduinoService, private cdr: ChangeDetectorRef) {}
   ngOnInit() {
-    this.realTimeDataService.data$.subscribe((data:any) => {
-      this.realTimeData = data;
+    this.arduinoService.getSensorObservable(Sensor.WATER_FLOW).subscribe((valorDelSensor) => {
+      console.log('Nuevo valor del sensor watterflow:', valorDelSensor);
+      this.valorDelSensor1 = valorDelSensor;
+      this.cdr.detectChanges();
+      
+      // Actualizar la interfaz de usuario u realizar acciones adicionales aquí
     });
 
-    // Simular cambios en tiempo real (esto es solo para demostración)
-    setInterval(() => {
-      const newValue = Math.floor(Math.random() * 100); // Valor aleatorio para simular cambios
-      this.realTimeDataService.updateRealTimeData(newValue);
-    }, 2000); // Cambia cada 2 segundos (simulación)
+    this.arduinoService.getSensorObservable(Sensor.VOLUME).subscribe((valorDelSensor) => {
+      console.log('Nuevo valor del sensor Volumen:', valorDelSensor);
+      this.valorDelSensor2 = valorDelSensor;
+      this.cdr.detectChanges();
+      
+      // Actualizar la interfaz de usuario u realizar acciones adicionales aquí
+    });
+  }
+
+  ngOnDestroy() {
+    // Desinscribirse para evitar pérdidas de memoria
+    if (this.sensorSubscription) {
+      this.sensorSubscription.unsubscribe();
+    }
   }
 }
