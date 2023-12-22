@@ -2,12 +2,14 @@ import { Injectable } from '@angular/core';
 
 // If you import a module but never use any of the imported values other than as TypeScript types,
 // the resulting javascript file will look as if you never imported the module at all.
-import { ipcRenderer, webFrame } from 'electron';
+import { ipcRenderer, webFrame,ipcMain } from 'electron';
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
-
+import * as path from 'path';
 import * as SerialPort from 'serialport';
-
+//import { SqliteService } from '../sqlite/sqlite.service';
+import { sqlite3 } from 'sqlite3';
+import * as logger from 'electron-log';
 @Injectable({
   providedIn: 'root'
 })
@@ -17,29 +19,28 @@ export class ElectronService {
   childProcess!: typeof childProcess;
   fs!: typeof fs;
   serialPort!: typeof SerialPort;
+  sqlite! : sqlite3;
+  path! : typeof path;
+  logger! : typeof logger;
+  //sqlite : SqliteService;
 
   constructor() {
     // Conditional imports
     if (this.isElectron) {
+      this.path = window.require('path');
+      /* initialize logger */
 
+      // this.logger = window.require('electron-log');
+      // this.setupLogger();
+      // this.logger.info('main.ts');
+      /* end of initialize logger */
+
+      this.ipcRenderer = window.require('electron').ipcRenderer;
+      this.webFrame = window.require('electron').webFrame;
+      this.childProcess = window.require('child_process');
+      this.fs = window.require('fs');
       this.serialPort = window.require('serialport');
-      this.ipcRenderer = (window as any).require('electron').ipcRenderer;
-      this.webFrame = (window as any).require('electron').webFrame;
-
-      this.fs = (window as any).require('fs');
-
-      this.childProcess = (window as any).require('child_process');
-      this.childProcess.exec('node -v', (error, stdout, stderr) => {
-        if (error) {
-          console.error(`error: ${error.message}`);
-          return;
-        }
-        if (stderr) {
-          console.error(`stderr: ${stderr}`);
-          return;
-        }
-        console.log(`stdout:\n${stdout}`);
-      });
+      this.sqlite = window.require('sqlite3').verbose();
 
       // Notes :
       // * A NodeJS's dependency imported with 'window.require' MUST BE present in `dependencies` of both `app/package.json`
@@ -57,5 +58,23 @@ export class ElectronService {
 
   get isElectron(): boolean {
     return !!(window && window.process && window.process.type);
+  }
+
+  setupLogger() {
+    // Same as for console transport
+    this.logger.transports.file.level = 'info';
+    this.logger.transports.file.format = '{h}:{i}:{s}:{ms} {text}';
+
+    // Set approximate maximum log size in bytes. When it exceeds,
+    // the archived log will be saved as the log.old.log file
+    this.logger.transports.file.maxSize = 5 * 1024 * 1024;
+
+    // Write to this file, must be set before first logging
+    this.logger.transports.file.resolvePath = () => this.path.resolve("bd/log/","log.log");
+    // fs.createWriteStream options, must be set before first logging
+    //logger.transports.file.streamConfig = {flags: 'w'};
+
+    // set existed file stream
+    //logger.transports.file.stream = fs.createWriteStream('log.log');
   }
 }
