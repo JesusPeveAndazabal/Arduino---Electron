@@ -1,5 +1,5 @@
 // import { WebSocketClientService } from './../websocket-client/web-socket-client.service';
-// import { APP_CONFIG } from '../../../../environments.prod';
+import { environment } from './../../../../environments/environment.prod';
 
 import { Injectable } from '@angular/core';
 
@@ -9,7 +9,6 @@ import { Person,Lot, NozzleColor, NozzleType, Nozzles, WorkExecution, Work, Cult
 import * as moment from 'moment';
 import { SocketEvent,WorkDataChange } from '../../utils/global';
 import { LocalConf } from '../../models/local_conf';
-import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -89,7 +88,7 @@ export class DatabaseService extends ElectronService {
                 + "	cultivation_name TEXT, \n"
                 + "	product INTEGER, \n"
                 + "	product_name TEXT, \n"
-                + "	risk INTEGER \n"
+                + "	risk INTEGER, \n"
                 + "	risk_name TEXT, \n"
                 + "	pressure_tolerance REAL \n"
                 + "	); \n"
@@ -141,6 +140,13 @@ export class DatabaseService extends ElectronService {
                 + "	name TEXT \n"
                 + "	); \n"
 
+                + " CREATE TABLE IF NOT EXISTS readings( \n"
+                + " id INTEGER PRIMARY KEY, \n"
+                + " configuration TEXT, \n"
+                + " cultivation INTEGER, \n"
+                + " current_real_volume INTEGER \n"
+                + " ); \n"
+
                 + "	CREATE TABLE IF NOT EXISTS nozzles( \n"
                 + "	id INTEGER PRIMARY KEY, \n"
                 + "	type INTEGER, \n"
@@ -174,7 +180,28 @@ export class DatabaseService extends ElectronService {
                 + "	unit_pressure INTEGER, \n"
                 + "	min_pressure REAL, \n"
                 + "	max_pressure REAL \n"
-                + " ); ";
+                + " ); \n"
+
+                + " CREATE TABLE IF NOT EXISTS info(\n"
+                + " id INTEGER PRIMARY KEY, \n"
+                + " payload TEXT , \n"
+                + " topic TEXT , \n"
+                + " updated_on TEXT\n"
+                + " ); \n"
+
+                + " CREATE TABLE IF NOT EXISTS config(\n"
+                + " id INTEGER PRIMARY KEY, \n"
+                + " api_server TEXT, \n"
+                + " max_pressure INTEGER, \n"
+                + " max_flow INTEGER \n"
+                + " ); \n"
+
+                + " CREATE TABLE IF NOT EXISTS commands(\n"
+                + " id INTEGER PRIMARY KEY, \n"
+                + " payload TEXT, \n"
+                + " topic TEXT, \n"
+                + " update_on TEXT \n"
+                + " );";
 
           db = db.exec(sql);
           db.close();
@@ -267,8 +294,8 @@ export class DatabaseService extends ElectronService {
   async getPersonData(): Promise<Person[]> {
     return new Promise<Person[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
-      let sql = "SELECT * from person where is_deleted = 0";
-      db.get(sql,[ ],(err,rows : Person[])=>{
+      let sql = "SELECT * from person where is_deleted = false";
+      db.all(sql,[ ],(err,rows : Person[])=>{
         if(err){
           process.nextTick(() => reject(err));
         }
@@ -308,7 +335,7 @@ export class DatabaseService extends ElectronService {
     return new Promise<Lot[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
       let sql = "SELECT * from lot";
-      db.get(sql,[ ],(err,rows : Lot[])=>{
+      db.all(sql,[ ],(err,rows : Lot[])=>{
         if(err){
           process.nextTick(() => reject(err));
         }
@@ -348,7 +375,7 @@ export class DatabaseService extends ElectronService {
     return new Promise<NozzleColor[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
       let sql = "SELECT * from nozzle_color";
-      db.get(sql,[ ],(err,rows : NozzleColor[])=>{
+      db.all(sql,[ ],(err,rows : NozzleColor[])=>{
         if(err){
           process.nextTick(() => reject(err));
         }
@@ -388,7 +415,7 @@ export class DatabaseService extends ElectronService {
     return new Promise<NozzleType[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
       let sql = "SELECT * from nozzle_type";
-      db.get(sql,[ ],(err,rows : NozzleType[])=>{
+      db.all(sql,[ ],(err,rows : NozzleType[])=>{
         if(err){
           process.nextTick(() => reject(err));
         }
@@ -427,7 +454,7 @@ export class DatabaseService extends ElectronService {
     return new Promise<Nozzles[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
       let sql = "SELECT * from nozzles";
-      db.get(sql,[ ],(err,rows : Nozzles[])=>{
+      db.all(sql,[ ],(err,rows : Nozzles[])=>{
         if(err){
           process.nextTick(() => reject(err));
         }
@@ -466,7 +493,7 @@ export class DatabaseService extends ElectronService {
     return new Promise<WorkExecution[]>((resolve, reject) =>{
       let db = new this.sqlite.Database(this.file);
       let sql = "SELECT * from work_execution";
-      db.get(sql,[ ],(err,rows : WorkExecution[])=>{
+      db.all(sql,[ ],(err,rows : WorkExecution[])=>{
         if(err){
           process.nextTick(() => reject(err));
         }
@@ -641,7 +668,7 @@ export class DatabaseService extends ElectronService {
     return new Promise<Work[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
       let sql = "SELECT * from work";
-      db.get(sql,[ ],(err,rows : Work[])=>{
+      db.all(sql,[ ],(err,rows : Work[])=>{
         if(err){
           process.nextTick(() => reject(err));
         }
@@ -680,7 +707,7 @@ export class DatabaseService extends ElectronService {
     return new Promise<Cultivation[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
       let sql = "SELECT * from cultivation";
-      db.get(sql,[ ],(err,rows : Cultivation[])=>{
+      db.all(sql,[ ],(err,rows : Cultivation[])=>{
         if(err){
           process.nextTick(() => reject(err));
         }
@@ -720,7 +747,7 @@ export class DatabaseService extends ElectronService {
     return new Promise<Farm[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
       let sql = "SELECT * from farm";
-      db.get(sql,[ ],(err,rows : Farm[])=>{
+      db.all(sql,[ ],(err,rows : Farm[])=>{
         if(err){
           process.nextTick(() => reject(err));
         }
@@ -760,15 +787,20 @@ export class DatabaseService extends ElectronService {
     return new Promise<Product[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
       let sql = "SELECT * from product";
-      db.get(sql,[ ],(err,rows : Product[])=>{
-        if(err){
-          process.nextTick(() => reject(err));
+      
+      db.all(sql, [], (err: any, rows: Product[]) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows);
         }
-        process.nextTick(() => resolve(rows));
+  
+        // Mover la llamada a db.close() dentro del callback
+        db.close();
       });
-      db.close();
     });
   }
+   
 
   /**
    * Save Farm's data from server to local db for offline case uses
@@ -831,6 +863,7 @@ export class DatabaseService extends ElectronService {
         db.close();
     });
   }
+  
 
 
 }

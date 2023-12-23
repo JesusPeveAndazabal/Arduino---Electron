@@ -16,6 +16,7 @@ import { ArduinoDevice } from './core/services/arduino/arduino.device';
 import { Sensor } from './core/utils/global';
 import { ChangeDetectorRef } from '@angular/core';
 import { DatabaseService } from './core/services/database/database.service';
+import { Product } from './core/models/product';
 
 @Component({
   selector: 'app-root',
@@ -28,6 +29,7 @@ import { DatabaseService } from './core/services/database/database.service';
 })
 
 export class AppComponent implements OnInit{
+  products: Product[] = [];
   valorWatterflow: number | undefined; 
   valorVolumen: number | undefined; 
   valorPH: number | undefined; 
@@ -36,11 +38,13 @@ export class AppComponent implements OnInit{
 
   constructor(private arduinoService : ArduinoService, private cdr: ChangeDetectorRef , private dataService : DatabaseService) {
   }
-  ngOnInit() {
+  async ngOnInit() {
 
     //Creacion de la base de datos - SQLite
-    this.dataService.openConnection().then((db) => {
+    this.dataService.openConnection().then(async (db) => {
       console.log('Base de datos creada correctamente:', db);
+      this.products = await this.arduinoService.getAllProducts();
+      console.log("Lista de productos" , this.products);
       // Realiza acciones adicionales si es necesario
     }).catch((error) => {
       console.error('Error al crear la base de datos:', error);

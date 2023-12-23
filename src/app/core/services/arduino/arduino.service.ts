@@ -6,9 +6,10 @@ import { ElectronService } from '../electron/electron.service';
 import { ArduinoDevice } from './arduino.device';
 import { Subject, Observable } from 'rxjs';
 import { Sensor } from '../../utils/global';
-import { DatabaseService } from '../database/database.service';
+import { DatabaseService  } from '../database/database.service';
 import { Chronos , Config} from '../../utils/utils';
 import { Database, sqlite3 } from 'sqlite3';
+import { Product } from '../../models/product';
 
 
 
@@ -47,46 +48,23 @@ export class ArduinoService {
  
   constructor( private electronService: ElectronService , private databaseService : DatabaseService) {
     this.setupSensorSubjects();
-    this.initialize()
+    
     this.arduino1 = new ArduinoDevice("COM23",115200,true,electronService,this);
     this.arduino2 = new ArduinoDevice("COM4",115200,true,electronService,this); 
+    //this.getAllProducts();
   }
 
-  private async initialize() {
+  async getAllProducts(): Promise<Product[]> {
     try {
-      // Utiliza la instancia de DatabaseService para abrir la conexión
-      this.db = await this.databaseService.openConnection();
-  
-      // Realiza las operaciones de la base de datos, por ejemplo, consulta SELECT
-      const query = "SELECT * FROM work_execution WHERE is_finished = 0";
-  
-      // Utiliza promesas para envolver la operación de consulta
-      const rows = await new Promise<any[]>((resolve, reject) => {
-        this.db.all(query, [], (err: any, rows: any) => {
-          if (err) {
-            console.error('Error executing query:', err);
-            reject(err);
-          } else {
-            console.log("Acceso al query");
-            resolve(rows);
-          }
-        });
-      });
-  
-      console.log('Query result:', rows);
-  
-      // Realiza otras operaciones después de obtener los resultados de la consulta
-      // ...
-  
-      // Cierra la conexión después de usarla
-      await this.databaseService.closeDB();
-  
+      // Llama al método getProductData del servicio de base de datos
+      const products = await this.databaseService.getProductData();
+      return products;
     } catch (error) {
-      console.error('Error during database initialization:', error);
+      console.error('Error al obtener los datos de los productos:', error);
+      throw error; // Puedes manejar el error de otra manera según tus necesidades
     }
   }
   
-
   //Este es el encargado de generar y emitir eventos de actualización
   private setupSensorSubjects(): void {
       // Crear Subject para cada tipo de sensor
@@ -114,5 +92,7 @@ export class ArduinoService {
 
 
 
+  
+  
 
 }

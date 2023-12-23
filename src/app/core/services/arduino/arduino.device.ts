@@ -25,7 +25,7 @@ export class ArduinoDevice {
   /* data : reqlpro 
   formato -
 
-  json - string */
+    json - string */
 
   private isReconnecting: boolean = false;
 
@@ -36,7 +36,7 @@ export class ArduinoDevice {
   private sensorVolumeSubject: Subject<Sensor> = new Subject<Sensor>();
 
   //Este se comporta como el serial_device
-
+ 
   constructor(
     public path: string,public baudrate: number,public autoOpen: boolean,
     private electronService: ElectronService,
@@ -70,7 +70,7 @@ export class ArduinoDevice {
       this.port.on('close', handleReconnect);
       this.port.on('error', handleReconnect);
       
-    
+      
       //variable para instanciar el this dentro de una funcion : clearInterval()
       let instance = this;
 
