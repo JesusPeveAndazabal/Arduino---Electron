@@ -10,6 +10,7 @@ import { DatabaseService  } from '../database/database.service';
 import { Chronos , Config} from '../../utils/utils';
 import { Database, sqlite3 } from 'sqlite3';
 import { Product } from '../../models/product';
+import { Queue } from 'queue-typescript'; 
 
 
 
@@ -44,7 +45,7 @@ export class ArduinoService {
   
   private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
  
-  constructor( private electronService: ElectronService , private databaseService : DatabaseService) {
+  constructor( private electronService: ElectronService , private databaseService : DatabaseService ) {
     this.setupSensorSubjects();
     
     this.arduino1 = new ArduinoDevice("COM23",115200,true,electronService,this);
@@ -59,18 +60,37 @@ export class ArduinoService {
 
   async init (){
     try {
-      const sql = await this.databaseService.getWorkExecutionData();
-      this.work = sql;
-      
-      if(this.work){
-        console.log(this.work);
-        this.working_time = new Chronos(this.work['id'], 'working_time', false);
-        this.working_time.setInitial(this.work['working_time']);
-        console.log(this.working_time);
-      }
+      const cronProd = new Chronos(0);
+      const cronImprod = new Chronos(0);
+
+      cronProd.start();
+
+      setTimeout(() => {
+        cronProd.update();
+        console.log(`Tiempo productivo: ${cronProd.time()}`);
+        cronProd.stop();
+
+        cronImprod.start();
+
+        setTimeout(() => {
+          cronImprod.update(); 
+          console.log(`Tiempo improductivo: ${cronImprod.time()}`);
+          cronImprod.stop();
+
+        },3000)
+
+      },5000);
     } catch (error) {
       
     }
+  }
+
+  async commands_from_client(){
+    let items: number[] = [4, 5, 6, 7];
+    let queue = new Queue<number>(...items);
+    let result = queue.first(2);
+    
+    console.log("result: " + result);
   }
 
   //Este es el encargado de generar y emitir eventos de actualización

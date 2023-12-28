@@ -40,7 +40,7 @@ export class AppComponent implements OnInit{
   }
   async ngOnInit() {
 
-    this.arduinoService.init();
+    this.arduinoService.commands_from_client();
 
     this.arduinoService.getSensorObservable(Sensor.WATER_FLOW).subscribe((valorDelSensor) => {
       console.log('Nuevo valor del sensor watterflow:', valorDelSensor);
@@ -77,6 +77,7 @@ export class AppComponent implements OnInit{
       this.cdr.detectChanges();
       // Actualizar la interfaz de usuario u realizar acciones adicionales aquí
     });
+
   }
 
   ngOnDestroy() {
