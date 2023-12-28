@@ -15,6 +15,7 @@ import { LocalConf } from '../../models/local_conf';
 })
 
 export class DatabaseService extends ElectronService {
+  [x: string]: any;
   // isService = false;
   // native = false;
   file! : string;
@@ -117,7 +118,7 @@ export class DatabaseService extends ElectronService {
                 + "	); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS lot( \n"
-                + "	id INTEGER PRIMARY KEY, \n"
+                + "	id INTEGER PRIMARY KEY AUTOINCREMENT, \n"
                 + "	name TEXT, \n"
                 + "	hectare REAL, \n"
                 + "	width REAL, \n"
@@ -130,25 +131,28 @@ export class DatabaseService extends ElectronService {
                 + "	); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS nozzle_type ( \n"
-                + "	id INTEGER PRIMARY KEY, \n"
+                + "	id INTEGER PRIMARY KEY AUTOINCREMENT, \n"
                 + "	name TEXT \n"
                 + "	); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS nozzle_color( \n"
-                + "	id INTEGER PRIMARY KEY, \n"
+                + "	id INTEGER PRIMARY KEY AUTOINCREMENT, \n"
                 + "	code TEXT, \n"
                 + "	name TEXT \n"
                 + "	); \n"
 
-                + " CREATE TABLE IF NOT EXISTS readings( \n"
-                + " id INTEGER PRIMARY KEY, \n"
-                + " configuration TEXT, \n"
-                + " cultivation INTEGER, \n"
-                + " current_real_volume INTEGER \n"
+                + " CREATE TABLE IF NOT EXISTS work_execution_detail( \n"
+                + " id INTEGER PRIMARY KEY AUTOINCREMENT, \n"
+                + " id_work_execution INTEGER, \n"
+                + " gps REAL, \n"
+                + " data INTEGER, \n"
+                + " has_events BOOLEAN, \n"
+                + " events TEXT, \n"
+                + " FOREIGN KEY (id_work_execution) REFERENCES work_execution(id) \n"
                 + " ); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS nozzles( \n"
-                + "	id INTEGER PRIMARY KEY, \n"
+                + "	id INTEGER PRIMARY KEY AUTOINCREMENT, \n"
                 + "	type INTEGER, \n"
                 + "	color INTEGER, \n"
                 + "	pressure REAL, \n"
@@ -157,18 +161,18 @@ export class DatabaseService extends ElectronService {
                 + "	); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS cultivation( \n"
-                + "	id INTEGER PRIMARY KEY, \n"
+                + "	id INTEGER PRIMARY KEY AUTOINCREMENT, \n"
                 + "	code TEXT, \n"
                 + "	name TEXT \n"
                 + "	); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS farm( \n"
-                + "	id INTEGER PRIMARY KEY, \n"
+                + "	id INTEGER PRIMARY KEY AUTOINCREMENT, \n"
                 + "	name TEXT \n"
                 + "	); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS product( \n"
-                + "	id INTEGER PRIMARY KEY, \n"
+                + "	id INTEGER PRIMARY KEY AUTOINCREMENT, \n"
                 + "	name TEXT \n"
                 + "	); \n"
 
@@ -180,27 +184,6 @@ export class DatabaseService extends ElectronService {
                 + "	unit_pressure INTEGER, \n"
                 + "	min_pressure REAL, \n"
                 + "	max_pressure REAL \n"
-                + " ); \n"
-
-                + " CREATE TABLE IF NOT EXISTS info(\n"
-                + " id INTEGER PRIMARY KEY, \n"
-                + " payload TEXT , \n"
-                + " topic TEXT , \n"
-                + " updated_on TEXT\n"
-                + " ); \n"
-
-                + " CREATE TABLE IF NOT EXISTS config(\n"
-                + " id INTEGER PRIMARY KEY, \n"
-                + " api_server TEXT, \n"
-                + " max_pressure INTEGER, \n"
-                + " max_flow INTEGER \n"
-                + " ); \n"
-
-                + " CREATE TABLE IF NOT EXISTS commands(\n"
-                + " id INTEGER PRIMARY KEY, \n"
-                + " payload TEXT, \n"
-                + " topic TEXT, \n"
-                + " update_on TEXT \n"
                 + " );";
 
           db = db.exec(sql);
@@ -223,6 +206,15 @@ export class DatabaseService extends ElectronService {
       });
     }
   }
+
+/*   async executeSql(sql: string, params: any[]): Promise<any> {
+    await this.openConnection();
+    const result = await this.db.executeSql(sql, params);
+    await this.closeDB();
+    return result;
+  } */
+
+  
   /**
    * Open a new database connection.
    * This method must be called inside the ngAfterViewInit method or after the next cycle methods of the component.
@@ -296,6 +288,21 @@ export class DatabaseService extends ElectronService {
       let db = new this.sqlite.Database(this.file);
       let sql = "SELECT * from person where is_deleted = false";
       db.all(sql,[ ],(err,rows : Person[])=>{
+        if(err){
+          process.nextTick(() => reject(err));
+        }
+        process.nextTick(() => resolve(rows));
+      });
+      db.close();
+    });
+  }
+
+  //Consulta apra obtener la ejecucion de trabajo
+  async getWorkExecutionData(): Promise<WorkExecution[]> {
+    return new Promise<WorkExecution[]>((resolve, reject) => {
+      let db = new this.sqlite.Database(this.file);
+      let sql = "SELECT * from work_execution where is_finished = false";
+      db.all(sql,[ ],(err,rows : WorkExecution[])=>{
         if(err){
           process.nextTick(() => reject(err));
         }

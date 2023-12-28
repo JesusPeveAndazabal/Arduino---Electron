@@ -37,20 +37,24 @@ export class Chronos {
       this._startTime = null;
     }
   
-    setInitial(initial: string): void {
+    setInitial(initial: string | undefined): void {
       try {
-        const parsed = initial.split(':');
-        const seconds = parsed[2].split('.');
-        if (seconds.length > 1) {
-          this.accumulator = new Date(0, 0, 0, parseInt(parsed[0]), parseInt(parsed[1]), parseInt(seconds[0]), parseInt(seconds[1]));
+        if (initial) {
+          const parsed = initial.split(':');
+          const seconds = parsed[2].split('.');
+          if (seconds.length > 1) {
+            this.accumulator = new Date(0, 0, 0, parseInt(parsed[0]), parseInt(parsed[1]), parseInt(seconds[0]), parseInt(seconds[1]));
+          } else {
+            this.accumulator = new Date(0, 0, 0, parseInt(parsed[0]), parseInt(parsed[1]), parseInt(seconds[0]));
+          }
         } else {
-          this.accumulator = new Date(0, 0, 0, parseInt(parsed[0]), parseInt(parsed[1]), parseInt(seconds[0]));
+          console.error('timer... Initial value is undefined.');
         }
       } catch (ex) {
-        console.error("timer...", ex);
+        console.error('timer...', ex);
       }
     }
-  
+    
     elapsed(): Date {
       if (this._startTime) {
         this.update();

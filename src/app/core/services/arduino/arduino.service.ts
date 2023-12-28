@@ -5,7 +5,7 @@ import { ReadlineParser } from '@serialport/parser-readline'
 import { ElectronService } from '../electron/electron.service';
 import { ArduinoDevice } from './arduino.device';
 import { Subject, Observable } from 'rxjs';
-import { Sensor } from '../../utils/global';
+import { Sensor, SocketEvent, WorkStatusChange } from '../../utils/global';
 import { DatabaseService  } from '../database/database.service';
 import { Chronos , Config} from '../../utils/utils';
 import { Database, sqlite3 } from 'sqlite3';
@@ -37,12 +37,10 @@ export class ArduinoService {
 
   current_volume = 0;
   current_real_volume = 0;
-  min_volumen = 0;
+  min_volumen = 50;
 
   detail_number = 0;
   DEBUG = true;
-
-  private db : any;
   
   private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
  
@@ -51,20 +49,30 @@ export class ArduinoService {
     
     this.arduino1 = new ArduinoDevice("COM23",115200,true,electronService,this);
     this.arduino2 = new ArduinoDevice("COM4",115200,true,electronService,this); 
-    //this.getAllProducts();
   }
 
-  async getAllProducts(): Promise<Product[]> {
+/*   async getWorkFilter(){
+    const sql = await this.databaseService.getWorkExecutionData();
+    
+    console.log(sql);
+  } */
+
+  async init (){
     try {
-      // Llama al método getProductData del servicio de base de datos
-      const products = await this.databaseService.getProductData();
-      return products;
+      const sql = await this.databaseService.getWorkExecutionData();
+      this.work = sql;
+      
+      if(this.work){
+        console.log(this.work);
+        this.working_time = new Chronos(this.work['id'], 'working_time', false);
+        this.working_time.setInitial(this.work['working_time']);
+        console.log(this.working_time);
+      }
     } catch (error) {
-      console.error('Error al obtener los datos de los productos:', error);
-      throw error; // Puedes manejar el error de otra manera según tus necesidades
+      
     }
   }
-  
+
   //Este es el encargado de generar y emitir eventos de actualización
   private setupSensorSubjects(): void {
       // Crear Subject para cada tipo de sensor
@@ -89,10 +97,5 @@ export class ArduinoService {
       this.sensorSubjectMap.get(sensorType)!.next(value);
     }
   }
-
-
-
-  
-  
 
 }

@@ -36,19 +36,11 @@ export class AppComponent implements OnInit{
   valorTemperatura: number | undefined; 
   private sensorSubscription: Subscription | undefined;
 
-  constructor(private arduinoService : ArduinoService, private cdr: ChangeDetectorRef , private dataService : DatabaseService) {
+  constructor(private arduinoService : ArduinoService, private cdr: ChangeDetectorRef , private databaseService : DatabaseService) {
   }
   async ngOnInit() {
 
-    //Creacion de la base de datos - SQLite
-    this.dataService.openConnection().then(async (db) => {
-      console.log('Base de datos creada correctamente:', db);
-      this.products = await this.arduinoService.getAllProducts();
-      console.log("Lista de productos" , this.products);
-      // Realiza acciones adicionales si es necesario
-    }).catch((error) => {
-      console.error('Error al crear la base de datos:', error);
-    });
+    this.arduinoService.init();
 
     this.arduinoService.getSensorObservable(Sensor.WATER_FLOW).subscribe((valorDelSensor) => {
       console.log('Nuevo valor del sensor watterflow:', valorDelSensor);
