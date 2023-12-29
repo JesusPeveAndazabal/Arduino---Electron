@@ -23,7 +23,18 @@ import { Product } from './core/models/product';
   template: `<div *ngIf="valorWatterflow !== undefined">Valor del sensor Watterflow: {{ valorWatterflow }}</div>
              <div *ngIf="valorVolumen !== undefined">Valor del sensor Volumen: {{ valorVolumen }}</div>
              <div *ngIf="valorPH !== undefined">Valor del sensor PH: {{ valorPH }}</div>
-             <div *ngIf="valorTemperatura !== undefined">Valor del sensor Temperatura: {{ valorTemperatura }}</div>`
+             <div *ngIf="valorTemperatura !== undefined">Valor del sensor Temperatura: {{ valorTemperatura }}</div>
+             <div>
+              <button (click)="toggleValvulaIzquierda()">
+              {{ izquierdaActivada ? 'Desactivar' : 'Activar' }} Válvula Izquierda
+              </button>
+            </div>
+
+            <div>
+              <button (click)="toggleValvulaDerecha()">
+              {{ derechaActivada ? 'Desactivar' : 'Activar' }} Válvula Derecha
+              </button>
+            </div>`
             ,
   styleUrls: ['./app.component.scss']
 })
@@ -35,12 +46,36 @@ export class AppComponent implements OnInit{
   valorPH: number | undefined; 
   valorTemperatura: number | undefined; 
   private sensorSubscription: Subscription | undefined;
+  izquierdaActivada = false;
+  derechaActivada = false;
 
   constructor(private arduinoService : ArduinoService, private cdr: ChangeDetectorRef , private databaseService : DatabaseService) {
   }
+
+  toggleValvulaIzquierda():void{
+    this.izquierdaActivada = !this.izquierdaActivada;
+
+    if(this.izquierdaActivada){
+      this.arduinoService.activateLeftValve();
+    }else{
+      this.arduinoService.deactivateLeftValve();
+    }
+  }
+
+  toggleValvulaDerecha():void{
+    this.derechaActivada = !this.derechaActivada;
+
+    if(this.derechaActivada){
+      this.arduinoService.activateRightValve();
+    }else{
+      this.arduinoService.deactivateRightValve();
+    }
+  
+  }
+
   async ngOnInit() {
 
-    this.arduinoService.commands_from_client();
+    this.arduinoService.getMessage();
 
     this.arduinoService.getSensorObservable(Sensor.WATER_FLOW).subscribe((valorDelSensor) => {
       console.log('Nuevo valor del sensor watterflow:', valorDelSensor);

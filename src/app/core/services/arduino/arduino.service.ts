@@ -42,6 +42,8 @@ export class ArduinoService {
 
   detail_number = 0;
   DEBUG = true;
+
+  private last_date = new Date();
   
   private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
  
@@ -58,7 +60,7 @@ export class ArduinoService {
     console.log(sql);
   } */
 
-  async init (){
+    async init (){
     try {
       const cronProd = new Chronos(0);
       const cronImprod = new Chronos(0);
@@ -83,14 +85,60 @@ export class ArduinoService {
     } catch (error) {
       
     }
-  }
+    }
+    
+    getMessage(): { [key: string]: number } {
+      const message: { [key: string]: number } = {};
+  
+      // Utiliza la enumeración Sensor y su propiedad VALVE_LEFT
+      for (const sensor in Sensor) {
+        if (Sensor.hasOwnProperty(sensor)) {
+          const x = Sensor[sensor];
+  
+          if (typeof x === 'number' && x  < Sensor.VALVE_LEFT) {
+            message[`${x}`] = 0.0;
+            console.log("Mensaje" , message)
+          }
+        }
+      }
+  
+      return message;
+    }
+
+
+
+    // Método para activar la válvula izquierd
+    public activateLeftValve(): void {
+      const command = Sensor.VALVE_LEFT + '|1\n'; // Comando para activar la válvula izquierda
+      this.arduino2.sendCommand(command);
+    }
+  
+    // Método para desactivar la válvula izquierda
+    public deactivateLeftValve(): void {
+      const command = Sensor.VALVE_LEFT  + '|0\n'; // Comando para desactivar la válvula izquierda
+      this.arduino2.sendCommand(command);
+    }
+  
+    // Método para activar la válvula derecha 
+    public activateRightValve(): void {
+      const command = Sensor.VALVE_RIGHT + '|1\n'; // Comando para activar la válvula derecha
+      this.arduino2.sendCommand(command);
+    }
+  
+    // Método para desactivar la válvula derecha
+    public deactivateRightValve(): void {
+      const command = Sensor.VALVE_RIGHT + '|0\n'; // Comando para desactivar la válvula derecha
+      this.arduino2.sendCommand(command);
+    }
+  
 
   async commands_from_client(){
     let items: number[] = [4, 5, 6, 7];
     let queue = new Queue<number>(...items);
-    let result = queue.first(2);
+    let result = queue.append(30);
     
     console.log("result: " + result);
+
   }
 
   //Este es el encargado de generar y emitir eventos de actualización
