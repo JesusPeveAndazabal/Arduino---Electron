@@ -37,7 +37,7 @@ export const Configuration = {
       HUMIDITY = 9,
       VOLUME_CONTAINER = 10,
       
-      VALVE_LEFT = 20,
+      VALVE_LEFT = 20, 
       VALVE_RIGHT = 21,
       PRESSURE_REGULATOR = 22
   }

@@ -12,11 +12,11 @@ import { Observable, Subject } from 'rxjs';
 export class ArduinoDevice {
   private isRunning: boolean = false;
   private manualSetting : boolean = true;
-  private sensors: number[] = [];
-  private mode: number = 0;
+  sensors: number[] = [];
+  mode: number = 0;
   private port: any;
   private message_to_device : string[] = [];
-  private message_from_device: Map<Sensor, number> = new Map();
+  public message_from_device: Map<Sensor, number> = new Map();
   private messageInterval: any;
   private SensorWatterflow: any;
   private SensorVolumen:any;
@@ -75,7 +75,7 @@ export class ArduinoDevice {
       let instance = this;
 
       //Metodo suplente del while
-      this.messageInterval = setInterval(function(){
+      this.messageInterval = setInterval(function(){    
         //Obtener en la variable message los datos de bufffer mediante read()
         let message: Uint8Array | null = instance.port.read();
         if(message != null){

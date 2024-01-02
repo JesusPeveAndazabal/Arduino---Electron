@@ -75,7 +75,7 @@ export class AppComponent implements OnInit{
 
   async ngOnInit() {
 
-    this.arduinoService.getMessage();
+    this.arduinoService.read_devices();
 
     this.arduinoService.getSensorObservable(Sensor.WATER_FLOW).subscribe((valorDelSensor) => {
       console.log('Nuevo valor del sensor watterflow:', valorDelSensor);

@@ -10,7 +10,9 @@ import { DatabaseService  } from '../database/database.service';
 import { Chronos , Config} from '../../utils/utils';
 import { Database, sqlite3 } from 'sqlite3';
 import { Product } from '../../models/product';
-import { Queue } from 'queue-typescript'; 
+import { Queue } from 'queue-typescript';
+import { Mode } from '../../utils/global'; 
+import { devices } from 'playwright';
 
 
 
@@ -42,6 +44,10 @@ export class ArduinoService {
 
   detail_number = 0;
   DEBUG = true;
+  devicesCant : string[] = [];
+  //messages_from_device = [];
+
+  private messageInterval:any;
 
   private last_date = new Date();
   
@@ -54,57 +60,62 @@ export class ArduinoService {
     this.arduino2 = new ArduinoDevice("COM4",115200,true,electronService,this); 
   }
 
-/*   async getWorkFilter(){
-    const sql = await this.databaseService.getWorkExecutionData();
-    
-    console.log(sql);
-  } */
-
     async init (){
-    try {
-      const cronProd = new Chronos(0);
-      const cronImprod = new Chronos(0);
+      try {
+        const cronProd = new Chronos(0);
+        const cronImprod = new Chronos(0);
 
-      cronProd.start();
-
-      setTimeout(() => {
-        cronProd.update();
-        console.log(`Tiempo productivo: ${cronProd.time()}`);
-        cronProd.stop();
-
-        cronImprod.start();
+        cronProd.start();
 
         setTimeout(() => {
-          cronImprod.update(); 
-          console.log(`Tiempo improductivo: ${cronImprod.time()}`);
-          cronImprod.stop();
+          cronProd.update();
+          console.log(`Tiempo productivo: ${cronProd.time()}`);
+          cronProd.stop();
 
-        },3000)
+          cronImprod.start();
 
-      },5000);
-    } catch (error) {
-      
+          setTimeout(() => {
+            cronImprod.update(); 
+            console.log(`Tiempo improductivo: ${cronImprod.time()}`);
+            cronImprod.stop();
+
+          },3000)
+
+        },5000);
+      } catch (error) {
+        
+      }
     }
-    }
-    
-    getMessage(): { [key: string]: number } {
-      const message: { [key: string]: number } = {};
-  
-      // Utiliza la enumeración Sensor y su propiedad VALVE_LEFT
-      for (const sensor in Sensor) {
-        if (Sensor.hasOwnProperty(sensor)) {
-          const x = Sensor[sensor];
-  
-          if (typeof x === 'number' && x  < Sensor.VALVE_LEFT) {
-            message[`${x}`] = 0.0;
-            console.log("Mensaje" , message)
+
+    async read_devices(){
+      let lastDate: Date = new Date();
+      let message: { [key: string]: number } = {};
+      for (const x of Object.values(Sensor)) {
+          if (typeof x === 'number' && x < Sensor.VALVE_LEFT) {
+              message[`${x}`] = 0.0;
+          }
+      }
+
+      let instance = this;
+
+      this.messageInterval = setInterval(function(){
+        console.log("Ingreso a la funcion read_device");
+        if (instance.devicesCant.length === 0){
+          //console.log("Ingreso a la condicional");
+          const readable_devices = instance.devicesCant.filter((x:any) => x.mode === Mode.ONLY_READ || x.mode === Mode.READ_WRITE);
+          console.log("readabale :", readable_devices);
+
+          for (const d of readable_devices) {
+            console.log("harley" , d);
+            if(d.messa){
+            }
+            
           }
         }
-      }
-  
-      return message;
+      },1000)
     }
 
+    
 
 
     // Método para activar la válvula izquierd
@@ -131,15 +142,6 @@ export class ArduinoService {
       this.arduino2.sendCommand(command);
     }
   
-
-  async commands_from_client(){
-    let items: number[] = [4, 5, 6, 7];
-    let queue = new Queue<number>(...items);
-    let result = queue.append(30);
-    
-    console.log("result: " + result);
-
-  }
 
   //Este es el encargado de generar y emitir eventos de actualización
   private setupSensorSubjects(): void {
