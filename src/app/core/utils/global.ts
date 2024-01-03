@@ -22,7 +22,6 @@ export const Configuration = {
       ONLY_READ = 1,
       ONLY_WRITE = 2,
       READ_WRITE = 3
-  
   }
   
   export enum Sensor{

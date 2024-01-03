@@ -7,7 +7,7 @@ import { ArduinoDevice } from './arduino.device';
 import { Subject, Observable } from 'rxjs';
 import { Sensor, SocketEvent, WorkStatusChange } from '../../utils/global';
 import { DatabaseService  } from '../database/database.service';
-import { Chronos , Config} from '../../utils/utils';
+import { Chronos , TimeTracker} from '../../utils/utils';
 import { Database, sqlite3 } from 'sqlite3';
 import { Product } from '../../models/product';
 import { Queue } from 'queue-typescript';
@@ -23,6 +23,14 @@ import { devices } from 'playwright';
 })
 
 export class ArduinoService {
+
+  //Variables y funcion para calcular el tiempo de trabajo 
+/*   private cronProd = new Chronos(0);
+  private cronImprod = new Chronos(0); */
+
+  private timeTracker = new TimeTracker();
+
+  
   arduino1! : ArduinoDevice;
   arduino2! : ArduinoDevice;
 
@@ -32,11 +40,10 @@ export class ArduinoService {
 
   private work_first_started : boolean = false;
   
-  //Variables y funcion para calcular el tiempo de trabajo 
-  working_time = new Chronos(0, 'working_time',false);
-  downtime = new Chronos(0, 'downtime',false);
 
-  config: Config | null = null;
+  
+
+  /* config: Config | null = null; */
 
   current_volume = 0;
   current_real_volume = 0;
@@ -49,7 +56,7 @@ export class ArduinoService {
 
   private messageInterval:any;
 
-  private last_date = new Date();
+  private last_date = new Date(); 
   
   private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
  
@@ -57,13 +64,12 @@ export class ArduinoService {
     this.setupSensorSubjects();
     
     this.arduino1 = new ArduinoDevice("COM23",115200,true,electronService,this);
-    this.arduino2 = new ArduinoDevice("COM4",115200,true,electronService,this); 
+    this.arduino2 = new ArduinoDevice("COM6",115200,true,electronService,this); 
   }
 
-    async init (){
+/*     async init (){
       try {
-        const cronProd = new Chronos(0);
-        const cronImprod = new Chronos(0);
+     
 
         cronProd.start();
 
@@ -85,7 +91,7 @@ export class ArduinoService {
       } catch (error) {
         
       }
-    }
+    } */
 
     async read_devices(){
       let lastDate: Date = new Date();
@@ -105,17 +111,23 @@ export class ArduinoService {
           const readable_devices = instance.devicesCant.filter((x:any) => x.mode === Mode.ONLY_READ || x.mode === Mode.READ_WRITE);
           console.log("readabale :", readable_devices);
 
-          for (const d of readable_devices) {
-            console.log("harley" , d);
-            if(d.messa){
-            }
-            
+          // Asumiendo que message es un objeto en TypeScript
+          const valorSensor: number = message[Sensor.WATER_FLOW];
+
+          // Ahora, puedes usar valorSensor en tu condición
+          const is_improductive: boolean = valorSensor < 1;
+  
+          console.log("Impresion del sensor de watterflow" , valorSensor);
+          //console.log(is_improductive);
+          if(is_improductive){
+            console.log("Tiempo improductivo activado");
+          }else{
+            console.log("Tiempo productivo activado");
           }
+          
         }
       },1000)
     }
-
-    
 
 
     // Método para activar la válvula izquierd
@@ -164,8 +176,29 @@ export class ArduinoService {
   public notifySensorValue(sensorType: Sensor, value: Sensor): void {
     //console.log(`Nuevo valor para ${sensorType}: ${value}`)
     if (this.sensorSubjectMap.has(sensorType)) {
-      this.sensorSubjectMap.get(sensorType)!.next(value);
+      this.sensorSubjectMap.get(sensorType)!.next(value); 
     }
   }
 
+  //Notifica eventos del sensor de watterflow
+  public notifySensorWatterflow(sensor: Sensor, val: number) {
+    if (sensor === Sensor.WATER_FLOW && val < 1) {
+      this.timeTracker.startUnproductiveTime();
+      // Realiza acciones improductivas...
+  
+      // Detiene el tiempo improductivo
+      this.timeTracker.stopUnproductiveTime();
+  
+      console.log(`Tiempo improductivo: ${this.timeTracker.getUnproductiveTime()}`);
+    } else {
+      this.timeTracker.startProductiveTime();
+      // Realiza acciones productivas...
+  
+      // Detiene el tiempo productivo
+      this.timeTracker.stopProductiveTime();
+  
+      console.log(`Tiempo productivo: ${this.timeTracker.getProductiveTime()}`);
+    }
+  }
+  
 }
