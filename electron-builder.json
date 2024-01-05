@@ -1,17 +1,23 @@
 {
-  "asar": true,
+  "asar": false,
   "directories": {
     "output": "release/"
   },
   "files": [
     "**/*",
+    "node_modules",
     "!**/*.ts",
     "!*.map",
-    "!package.json",
-    "!package-lock.json",
+    "package.json",
+    "!package-lock.json"
+  ],
+  "extraResources": [
     {
-      "from": "../dist",
-      "filter": ["**/*"]
+      "from": "dist",
+      "to": "app",
+      "filter": [
+        "**/*"
+      ]
     }
   ],
   "win": {
@@ -31,8 +37,9 @@
   },
   "linux": {
     "icon": "dist/assets/icons",
-    "target": [
-      "AppImage"
-    ]
+    "target": {
+      "target" : "AppImage",
+      "arch" : ["arm64"]
+    }
   }
 }
