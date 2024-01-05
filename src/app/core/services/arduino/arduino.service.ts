@@ -1,5 +1,6 @@
 // arduino.service.ts
 import { Injectable } from '@angular/core';
+import { ToastrService ,IndividualConfig } from 'ngx-toastr';
 import { SerialPort} from 'serialport'; 
 import { ReadlineParser } from '@serialport/parser-readline'
 import { ElectronService } from '../electron/electron.service';
@@ -33,6 +34,7 @@ export class ArduinoService {
   
   arduino1! : ArduinoDevice;
   arduino2! : ArduinoDevice;
+  arduino3! : ArduinoDevice;
 
   private work : any;
   private isRunning: boolean = false;
@@ -60,11 +62,12 @@ export class ArduinoService {
   
   private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
  
-  constructor( private electronService: ElectronService , private databaseService : DatabaseService ) {
+  constructor( private electronService: ElectronService , private databaseService : DatabaseService , private toastr : ToastrService) {
     this.setupSensorSubjects();
     
     this.arduino1 = new ArduinoDevice("COM23",115200,true,electronService,this);
-    this.arduino2 = new ArduinoDevice("COM6",115200,true,electronService,this); 
+    this.arduino2 = new ArduinoDevice("COM29",115200,true,electronService,this); 
+    //this.arduino3 = new ArduinoDevice("COM29",115200,true,electronService,this); 
   }
 
 /*     async init (){
@@ -129,6 +132,18 @@ export class ArduinoService {
       },1000)
     }
 
+    public regulatePressureWithBars(bars: number): void {
+      const regulatorId = Sensor.PRESSURE_REGULATOR;
+      
+      // Convertir el valor de bares según sea necesario, por ejemplo, asumamos que está en la misma unidad que se usó en el script original
+      const barPressure = bars;
+      
+      //console.log('Enviando comando de regulación de presión...', barPressure);
+  
+      // Aquí deberías incluir la lógica para enviar el comando al dispositivo, por ejemplo:
+      this.arduino1.sendCommand(`${regulatorId}|${barPressure}`);
+    }
+  
 
     // Método para activar la válvula izquierd
     public activateLeftValve(): void {
@@ -154,7 +169,6 @@ export class ArduinoService {
       this.arduino2.sendCommand(command);
     }
   
-
   //Este es el encargado de generar y emitir eventos de actualización
   private setupSensorSubjects(): void {
       // Crear Subject para cada tipo de sensor
@@ -189,6 +203,10 @@ export class ArduinoService {
       // Detiene el tiempo improductivo
       this.timeTracker.stopUnproductiveTime();
   
+      this.toastr.error('ADVERTENCIA', 'CAUDAL FUERA DE RANGO', {
+        timeOut: 2000,
+      });
+
       console.log(`Tiempo improductivo: ${this.timeTracker.getUnproductiveTime()}`);
     } else {
       this.timeTracker.startProductiveTime();

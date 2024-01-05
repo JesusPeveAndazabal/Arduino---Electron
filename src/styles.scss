@@ -1,10 +1,18 @@
 /* You can add global styles to this file, and also import other style files */
+// styles.scss
+@import '~@fortawesome/fontawesome-free/css/all.css';
+
+
 html, body {
   margin: 0;
   padding: 0;
 
   height: 100%;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.custom-toast {
+  background-color: #c8132e; // Puedes cambiar este color según tus preferencias
 }
 
 /* CAN (MUST) BE REMOVED ! Sample Global style */

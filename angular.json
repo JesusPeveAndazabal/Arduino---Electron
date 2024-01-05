@@ -18,6 +18,7 @@
         },
         "@schematics/angular:component": {
           "style": "scss"
+          
         }
       },
       "prefix": "app",
@@ -36,7 +37,8 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "node_modules/ngx-toastr/toastr.css"
             ],
             "scripts": [],
             "customWebpackConfig": {
