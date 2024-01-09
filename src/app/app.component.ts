@@ -142,7 +142,7 @@ export class AppComponent implements OnInit{
 
     // Verificar si el volumen real actual pasó el límite y cerrar las válvulas
     if (this.currentRealVolume <= this.minVolume) {
-
+      
       //Se cierra las valulva
       this.arduinoService.deactivateLeftValve();
       this.arduinoService.deactivateRightValve();

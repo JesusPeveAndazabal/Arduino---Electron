@@ -1,6 +1,7 @@
 import {app, BrowserWindow, screen} from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as url from 'url';
 
 let win: BrowserWindow | null = null;
 const args = process.argv.slice(1),
@@ -38,8 +39,12 @@ function createWindow(): BrowserWindow {
       pathIndex = '../dist/index.html';
     }
 
-    const url = new URL(path.join('file:', __dirname, pathIndex));
-    win.loadURL(url.href);
+    //const url = new URL(path.join('file:', __dirname, pathIndex));
+    win.loadURL(url.format({
+      pathname: path.join(__dirname, pathIndex),
+      protocol: 'file:',
+      slashes: true
+    }));
   }
 
   // Emitted when the window is closed.

@@ -65,7 +65,7 @@ export class ArduinoService {
   constructor( private electronService: ElectronService , private databaseService : DatabaseService , private toastr : ToastrService) {
     this.setupSensorSubjects();
     
-    this.arduino1 = new ArduinoDevice("COM23",115200,true,electronService,this);
+    this.arduino1 = new ArduinoDevice("COM4",115200,true,electronService,this);
     this.arduino2 = new ArduinoDevice("COM29",115200,true,electronService,this); 
     //this.arduino3 = new ArduinoDevice("COM29",115200,true,electronService,this); 
   }

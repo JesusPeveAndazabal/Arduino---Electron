@@ -10,7 +10,7 @@
     "!*.map",
     "package.json",
     "!package-lock.json"
-  ],
+  ],  
   "extraResources": [
     {
       "from": "dist",
