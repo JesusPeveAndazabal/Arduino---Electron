@@ -23,49 +23,7 @@ import { Product } from './core/models/product';
 
 @Component({
   selector: 'app-root',
-  template: `<div *ngIf="valorWatterflow !== undefined">Watterflow - Caudal: {{ valorWatterflow }}</div>
-  <div *ngIf="valorVolumen !== undefined"> Volumen: {{ valorVolumen }}</div>
-  <div *ngIf="valorGPS !== undefined"> Gps: {{ valorGPS }}</div>
-  <div *ngIf="valorVelocidad !== undefined"> Velocidad: {{ valorVelocidad }}</div> 
-   
-  <div>
-    <label for="minVolume">Volumen Mínimo:</label>
-    <input type="number" id="minVolume" [(ngModel)]="minVolume" />
-  </div>
-
-  <div>
-    <label for="currentVolume">Volumen Actual en el Tanque:</label>
-    <input type="number" id="currentVolume" [(ngModel)]="currentVolume" />
-  </div>
-
-  <div>
-    <button (click)="calcularVolumenReal()">Calcular Volumen Real</button>
-  </div>
-  <div>
-    <div>
-      <button (click)="toggleValvulaIzquierda()">
-        <i [class]="izquierdaActivada ? 'fas fa-lock-open' : 'fas fa-lock'"></i>
-        {{ izquierdaActivada ? 'Desactivar' : 'Activar' }} Izquierda
-      </button>
-    </div>
-  
-    <div>
-      <button (click)="toggleValvulaDerecha()">
-        <i [class]="derechaActivada ? 'fas fa-lock-open' : 'fas fa-lock'"></i>
-        {{ derechaActivada ? 'Desactivar' : 'Activar' }} Derecha
-      </button>
-    </div>
-  </div>
-  <div *ngIf="valorPressure !== undefined">Presión: {{ valorPressure }} bares</div>
-  
-  <div>
-    <label for="inputPressure">Ingresar Presión:</label>
-    <input type="number" id="inputPressure" [(ngModel)]="inputPressureValue" />
-    <button (click)="regulatePressure()">Regulación de Presión</button>
-  </div>
-  
-  `
-            ,
+  templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
 
@@ -82,10 +40,13 @@ export class AppComponent implements OnInit{
   izquierdaActivada = false;
   derechaActivada = false;
 
-  minVolume: number = 0;
-  currentVolume: number = 0;
+  minVolume: number = 90;
+  currentVolume: number = 100;
   currentRealVolume: number = 0;
 
+  // Nuevos valores para el contenedor
+  nivelInicial: number = 100;
+  nivelMinimo: number = 20;
 
   inputLitrosValue: number | undefined;
 
@@ -134,28 +95,6 @@ export class AppComponent implements OnInit{
       this.inputPressureValue = undefined;
     }
   }
-  
-  calcularVolumenReal(): void {
-    const sensor = 5; // Ajusta este valor según tu lógica de obtención del sensor
-    this.currentRealVolume = this.currentRealVolume - this.currentVolume;
-    const value = this.currentRealVolume;
-
-    // Verificar si el volumen real actual pasó el límite y cerrar las válvulas
-    if (this.currentRealVolume <= this.minVolume) {
-      
-      //Se cierra las valulva
-      this.arduinoService.deactivateLeftValve();
-      this.arduinoService.deactivateRightValve();
-      // Lógica para detener las válvulas y enviar alertas...
-      this.toastr.info('ADVERTENCIA', 'RECARGUE EL TANQUE', {
-        timeOut: 2000,
-      });
-
-      // También puedes emitir eventos o llamar a otras funciones aquí.
-    }
-
-    // Otro código relacionado con el volumen...
-  }
 
  /*  regulatePressure(): void {
     const inputValue = this.formulario.controls.inputValue.value;
@@ -174,7 +113,7 @@ export class AppComponent implements OnInit{
   
   async ngOnInit() {
 
-    
+    this.arduinoService.inicializarContenedor(this.nivelInicial , this.nivelMinimo);
 
     //this.arduinoService.read_devices();
     
@@ -185,10 +124,14 @@ export class AppComponent implements OnInit{
     this.arduinoService.getSensorObservable(Sensor.WATER_FLOW).subscribe((valorDelSensor) => {
       //this.arduinoService.notifySensorWatterflow(Sensor.WATER_FLOW , valorDelSensor);
       this.valorWatterflow = valorDelSensor;
+    
+      
+      // Calcula el volumen en tiempo real según el caudal real
+      //this.currentVolume -= valorDelSensor; // Ajusta la lógica según tus necesidades
       
       //Forzar la vista de angular
       this.cdr.detectChanges();
-      this.arduinoService.notifySensorWatterflow(Sensor.WATER_FLOW , valorDelSensor);
+      //this.arduinoService.notifySensorWatterflow(Sensor.WATER_FLOW , valorDelSensor);
       
       // Actualizar la interfaz de usuario u realizar acciones adicionales aquí
     });
@@ -196,7 +139,16 @@ export class AppComponent implements OnInit{
     //VOLUMEN
     this.arduinoService.getSensorObservable(Sensor.VOLUME).subscribe((valorDelSensor) => {
       //console.log('Nuevo valor del sensor Volumen:', valorDelSensor);
-      this.valorVolumen = valorDelSensor;
+      this.valorVolumen = this.currentVolume - valorDelSensor;
+
+      if (this.valorVolumen < this.minVolume){
+        this.arduinoService.deactivateRightValve();
+        this.arduinoService.deactivateLeftValve();
+        this.toastr.info("Debe llenar el tanque - Valvulas cerradas");
+      }
+
+      //this.currentVolume = this.currentVolume - this.valorVolumen;
+
 
       //Forzar la vista de angular
       this.cdr.detectChanges();
@@ -244,6 +196,7 @@ export class AppComponent implements OnInit{
     });
 
   }
+
 
   ngOnDestroy() {
     // Desinscribirse para evitar pérdidas de memoria

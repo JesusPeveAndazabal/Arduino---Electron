@@ -37,7 +37,6 @@ export class ArduinoService {
   arduino3! : ArduinoDevice;
 
   private work : any;
-  private isRunning: boolean = false;
   private firstRun : boolean = false;
 
   private work_first_started : boolean = false;
@@ -49,7 +48,17 @@ export class ArduinoService {
 
   current_volume = 0;
   current_real_volume = 0;
-  min_volumen = 50;
+  min_volumen = 0;
+
+
+   // Valores iniciales y mínimos del contenedor
+   private nivelInicial: number = 100; // Valor inicial del contenedor
+   private nivelMinimo: number = 20;   // Valor mínimo del contenedor para mostrar alerta
+ 
+   // Otros atributos necesarios para tu lógica
+  private currentRealVolume: number = this.nivelInicial; // Inicializa con el valor inicial
+  private isRunning: boolean = true;  // Supongo que tu lógica inicializa esto en true
+
 
   detail_number = 0;
   DEBUG = true;
@@ -59,6 +68,8 @@ export class ArduinoService {
   private messageInterval:any;
 
   private last_date = new Date(); 
+  private currentVolume: number = 100.0; // Volumen inicial en litros
+  private minVolume: number = 10.0; // Volumen mínimo deseado en litros
   
   private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
  
@@ -66,8 +77,41 @@ export class ArduinoService {
     this.setupSensorSubjects();
     
     this.arduino1 = new ArduinoDevice("COM4",115200,true,electronService,this);
-    this.arduino2 = new ArduinoDevice("COM29",115200,true,electronService,this); 
+    this.arduino2 = new ArduinoDevice("COM23",115200,true,electronService,this); 
     //this.arduino3 = new ArduinoDevice("COM29",115200,true,electronService,this); 
+  }
+
+  inicializarContenedor(inicial: number, minimo: number): void {
+    this.nivelInicial = inicial;
+    this.currentRealVolume = inicial;
+    this.nivelMinimo = minimo;
+  }
+
+  // Función para procesar datos del volumen y caudal
+  procesarDatos(sensor: number, value: number): void {
+    if (sensor === Sensor.VOLUME) {
+      // Actualizar el valor normal del volumen
+      const message = { [`${sensor}`]: value };
+
+      // Calcular valor del volumen real del contenedor para mostrar en la app
+      sensor = Sensor.VOLUME_CONTAINER;
+      this.currentRealVolume -= value;
+      value = this.currentRealVolume;
+
+      // Verificar si el volumen real actual pasó el límite y cerrar las válvulas
+      if (this.currentRealVolume <= this.nivelMinimo) {
+        if (this.isRunning) {
+          
+          // Aquí puedes agregar la lógica para mostrar una alerta o realizar otras acciones necesarias
+        }
+        this.isRunning = false;
+        // Aquí puedes agregar más lógica según tus necesidades
+      }
+
+      message[`${sensor}`] = value;
+    }
+
+    // Lógica adicional según tus necesidades
   }
 
 /*     async init (){
@@ -143,6 +187,9 @@ export class ArduinoService {
       // Aquí deberías incluir la lógica para enviar el comando al dispositivo, por ejemplo:
       this.arduino1.sendCommand(`${regulatorId}|${barPressure}`);
     }
+
+    
+
   
 
     // Método para activar la válvula izquierd
@@ -196,27 +243,27 @@ export class ArduinoService {
 
   //Notifica eventos del sensor de watterflow
   public notifySensorWatterflow(sensor: Sensor, val: number) {
-    if (sensor === Sensor.WATER_FLOW && val < 1) {
-      this.timeTracker.startUnproductiveTime();
-      // Realiza acciones improductivas...
-  
-      // Detiene el tiempo improductivo
-      this.timeTracker.stopUnproductiveTime();
-  
-      this.toastr.error('ADVERTENCIA', 'CAUDAL FUERA DE RANGO', {
-        timeOut: 2000,
-      });
+    if (sensor === Sensor.WATER_FLOW && val > 0) {
+      // Calcula la reducción de volumen en función del caudal
+      const volumeReduction = val * 60.0 / 1000.0; // Convierte el caudal de mL/s a litros/minuto
+      
+      // Actualiza el volumen actual
+      this.currentVolume -= volumeReduction;
 
-      console.log(`Tiempo improductivo: ${this.timeTracker.getUnproductiveTime()}`);
-    } else {
-      this.timeTracker.startProductiveTime();
-      // Realiza acciones productivas...
-  
-      // Detiene el tiempo productivo
-      this.timeTracker.stopProductiveTime();
-  
-      console.log(`Tiempo productivo: ${this.timeTracker.getProductiveTime()}`);
+      if (this.currentVolume < this.minVolume) {
+        // Realiza acciones adicionales cuando el volumen alcanza el mínimo
+        console.log('Volumen mínimo alcanzado');
+        // Puedes realizar otras acciones o detener el flujo según tus necesidades
+      }
+
+      // También puedes emitir eventos o notificar sobre cambios en el volumen
+      this.notifyVolumeChange(this.currentVolume);
     }
+  }
+
+  private notifyVolumeChange(volume: number): void {
+    // Emite un evento o realiza acciones cuando cambia el volumen
+    console.log(`Volumen actual: ${volume} litros`);
   }
   
 }

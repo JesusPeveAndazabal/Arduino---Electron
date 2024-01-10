@@ -1,1 +1,83 @@
-<router-outlet></router-outlet>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    <div class="row mt-5" style="align-items: center;">
+        <div class="col-md-3 d-flex align-items-center justify-content-center">
+          <form>
+            <div class="form-group">
+              <label for="formGroupExampleInput">Ingrese el volumen minimo del Tanque</label>
+              <input type="number" class="form-control" id="minVolume" [(ngModel)]="minVolume">
+            </div>
+            <div class="form-group">
+              <label for="formGroupExampleInput2">Ingrese el volumen actual del Tanque</label>
+              <input type="number" class="form-control" id="currentVolume" [(ngModel)]="currentVolume">
+            </div>
+          </form>
+        </div>
+    
+        <div class="col-md-5 d-flex align-items-center justify-content-center">
+          <div class="card" style="width: 10rem; align-items: center;">
+            <img src="./assets/images/volumen.png" class="card-img-top" alt="..." style="width: 50%;">
+            <div class="card-body">
+              <div *ngIf="valorVolumen !== undefined"> Volumen: {{ valorVolumen }}</div>
+            </div>
+          </div>  
+        </div>
+        
+        <div class="col-md-4 d-flex align-items-center justify-content-center">
+          <div class="card" style="width: 10rem; align-items: center;">
+            <img src="./assets/images/pipe.svg" class="card-img-top" alt="..." style="width: 50%;">
+            <div class="card-body">
+              <div *ngIf="valorWatterflow !== undefined">Caudal: {{ valorWatterflow }}</div>
+            </div>
+          </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card mb-3">
+          <div class="card-body">
+            <h5 class="card-title">Presión</h5>
+            <p class="card-text" *ngIf="valorPressure !== undefined">{{ valorPressure }} bares</p>
+            <div class="form-group">
+              <label for="inputPressure">Ingresar Presión:</label>
+              <input type="number" id="inputPressure" class="form-control" [(ngModel)]="inputPressureValue" />
+            </div>
+            <button class="btn btn-primary" (click)="regulatePressure()">Regulación de Presión</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-7 mr-5">
+          <button class="btn btn-primary" (click)="toggleValvulaIzquierda()">
+            <i [class]="izquierdaActivada ? 'fas fa-lock-open' : 'fas fa-lock'"></i>
+            {{ izquierdaActivada ? 'Desactivar' : 'Activar' }} Izquierda
+          </button>
+
+          <button class="btn btn-primary" (click)="toggleValvulaDerecha()">
+            <i [class]="derechaActivada ? 'fas fa-lock-open' : 'fas fa-lock'"></i>
+            {{ derechaActivada ? 'Desactivar' : 'Activar' }} Derecha
+          </button>
+      </div>
+    </div>
+
+
+   
+ 
+  <div *ngIf="valorGPS !== undefined"> Gps: {{ valorGPS }}</div>
+  <div *ngIf="valorVelocidad !== undefined"> Velocidad: {{ valorVelocidad }}</div> 
+
+</body>
+</html>
+
+
+
+
