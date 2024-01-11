@@ -82,34 +82,11 @@ export class AppComponent implements OnInit{
 
   regulatePressure(): void {
     if (this.inputPressureValue !== undefined) {
-      // Formatear el número con dos decimales antes de enviarlo al Arduino
-      const formattedValue = this.inputPressureValue.toFixed(2);
-      
-      // Imprimir el valor formateado en la consola para verificar
-      console.log('Valor formateado:', formattedValue);
-  
-      // Llamar a la función del servicio para regular la presión con el valor ingresado
-      this.arduinoService.regulatePressureWithBars(parseFloat(formattedValue));
-  
-      // Limpiar el campo de entrada después de enviar el comando
-      this.inputPressureValue = undefined;
+      console.log(this.inputPressureValue);
+     this.arduinoService.regulatePressureWithBars(this.inputPressureValue);
     }
   }
 
- /*  regulatePressure(): void {
-    const inputValue = this.formulario.controls.inputValue.value;
-    if (inputValue !== null && inputValue !== '') {
-      const psi = parseFloat(inputValue);
-      if (!isNaN(psi)) {
-        // Realiza la conversión de unidades
-        const minPresion = 5;
-        const maxPresion = 15;
-        //const valorEnBares = convertPressureUnit(maxPresion, original_unit=UnitPressureEnum(int()));
-        //console.log("Valor" , valorEnBares);
-        //this.arduinoService.regulatePressureWithBars(valorEnBares);
-      }
-    }
-  } */
   
   async ngOnInit() {
 
@@ -156,7 +133,7 @@ export class AppComponent implements OnInit{
       // Actualizar la interfaz de usuario u realizar acciones adicionales aquí
     });
 
-    //PH
+    //PH -- POR EL MOMENTO NO SE USARA 
     this.arduinoService.getSensorObservable(Sensor.PH).subscribe((valorDelSensor) => {
       //console.log('Nuevo valor del sensor PH', valorDelSensor);
       this.valorPH = valorDelSensor;
@@ -165,7 +142,7 @@ export class AppComponent implements OnInit{
       // Actualizar la interfaz de usuario u realizar acciones adicionales aquí
     });
 
-    //TEMPERATURA
+    //TEMPERATUR
     this.arduinoService.getSensorObservable(Sensor.TEMPERATURE).subscribe((valorDelSensor) => {
       //console.log('Nuevo valor del sensor Temperatura', valorDelSensor);
       this.valorTemperatura = valorDelSensor;
@@ -188,7 +165,7 @@ export class AppComponent implements OnInit{
       this.cdr.detectChanges();
     });
 
-    //Pressure - presion
+    //PRESSURE - PRESION
     this.arduinoService.getSensorObservable(Sensor.PRESSURE).subscribe((valorDelSensor) => {
       console.log("Valor de la presion" , valorDelSensor);
       this.valorPressure = valorDelSensor;

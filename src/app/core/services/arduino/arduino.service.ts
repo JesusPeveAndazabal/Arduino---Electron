@@ -140,7 +140,7 @@ export class ArduinoService {
       }
     } */
 
-    async read_devices(){
+/*     async read_devices(){
       let lastDate: Date = new Date();
       let message: { [key: string]: number } = {};
       for (const x of Object.values(Sensor)) {
@@ -175,7 +175,9 @@ export class ArduinoService {
         }
       },1000)
     }
-
+ */
+    
+    //Metodo para getionar la presion - Regulador
     public regulatePressureWithBars(bars: number): void {
       const regulatorId = Sensor.PRESSURE_REGULATOR;
       
@@ -185,12 +187,9 @@ export class ArduinoService {
       //console.log('Enviando comando de regulación de presión...', barPressure);
   
       // Aquí deberías incluir la lógica para enviar el comando al dispositivo, por ejemplo:
-      this.arduino1.sendCommand(`${regulatorId}|${barPressure}`);
+      this.arduino1.sendCommand(`${regulatorId}|${barPressure.toFixed(2)}`);
     }
 
-    
-
-  
 
     // Método para activar la válvula izquierd
     public activateLeftValve(): void {
@@ -242,7 +241,7 @@ export class ArduinoService {
   }
 
   //Notifica eventos del sensor de watterflow
-  public notifySensorWatterflow(sensor: Sensor, val: number) {
+ /*  public notifySensorWatterflow(sensor: Sensor, val: number) {
     if (sensor === Sensor.WATER_FLOW && val > 0) {
       // Calcula la reducción de volumen en función del caudal
       const volumeReduction = val * 60.0 / 1000.0; // Convierte el caudal de mL/s a litros/minuto
@@ -259,11 +258,11 @@ export class ArduinoService {
       // También puedes emitir eventos o notificar sobre cambios en el volumen
       this.notifyVolumeChange(this.currentVolume);
     }
-  }
+  } */
 
-  private notifyVolumeChange(volume: number): void {
+ /*  private notifyVolumeChange(volume: number): void {
     // Emite un evento o realiza acciones cuando cambia el volumen
     console.log(`Volumen actual: ${volume} litros`);
-  }
+  } */
   
 }

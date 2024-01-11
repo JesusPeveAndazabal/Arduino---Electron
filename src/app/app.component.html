@@ -42,7 +42,7 @@
 
 
     <div class="row">
-      <div class="col-md-4">
+      <div class="col-md-2">
         <div class="card mb-3">
           <div class="card-body">
             <h5 class="card-title">Presión</h5>
@@ -52,6 +52,14 @@
               <input type="number" id="inputPressure" class="form-control" [(ngModel)]="inputPressureValue" />
             </div>
             <button class="btn btn-primary" (click)="regulatePressure()">Regulación de Presión</button>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="card" style="width: 10rem; align-items: center;">
+          <img src="./assets/images/presionicon.jpg" class="card-img-top" alt="..." style="width: 50%;">
+          <div class="card-body">
+            <div *ngIf="valorWatterflow !== undefined">Presion: {{ valorPressure }}</div>
           </div>
         </div>
       </div>
@@ -68,12 +76,35 @@
           </button>
       </div>
     </div>
+    
 
+    <div class="row">
+
+      <div class="col-md-4"></div>
+      <div class="col-md-4">
+        <div class="card" style="width: 10rem; align-items: center;">
+          <img src="./assets/images/icongps.png" class="card-img-top" alt="..." style="width: 50%;">
+          <div class="card-body">
+            <div *ngIf="valorGPS !== undefined"> Gps: {{ valorGPS }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card" style="width: 10rem; align-items: center;">
+          <img src="./assets/images/velocidadicon.png" class="card-img-top" alt="..." style="width: 50%;">
+          <div class="card-body">
+            <div *ngIf="valorVelocidad !== undefined"> Velocidad: {{ valorVelocidad }}</div> 
+          </div>
+        </div>
+      </div>
+
+    </div> 
 
    
  
-  <div *ngIf="valorGPS !== undefined"> Gps: {{ valorGPS }}</div>
-  <div *ngIf="valorVelocidad !== undefined"> Velocidad: {{ valorVelocidad }}</div> 
+  
+  
 
 </body>
 </html>
