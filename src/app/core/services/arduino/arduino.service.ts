@@ -191,10 +191,16 @@ export class ArduinoService {
     }
 
 
+
     // Método para activar la válvula izquierd
     public activateLeftValve(): void {
       const command = Sensor.VALVE_LEFT + '|1\n'; // Comando para activar la válvula izquierda
       this.arduino2.sendCommand(command);
+    }
+
+    public resetVolumen(): void {
+      const command = 'B';
+      this.arduino1.sendCommand(command);
     }
   
     // Método para desactivar la válvula izquierda

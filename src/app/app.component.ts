@@ -40,8 +40,8 @@ export class AppComponent implements OnInit{
   izquierdaActivada = false;
   derechaActivada = false;
 
-  minVolume: number = 90;
-  currentVolume: number = 100;
+  minVolume: number = 0;
+  currentVolume: number = 0;
   currentRealVolume: number = 0;
 
   // Nuevos valores para el contenedor
@@ -85,6 +85,10 @@ export class AppComponent implements OnInit{
       console.log(this.inputPressureValue);
      this.arduinoService.regulatePressureWithBars(this.inputPressureValue);
     }
+  }
+
+  resetVolumen(): void {
+    this.arduinoService.resetVolumen();
   }
 
   
