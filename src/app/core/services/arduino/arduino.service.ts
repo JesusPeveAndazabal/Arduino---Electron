@@ -76,9 +76,9 @@ export class ArduinoService {
   constructor( private electronService: ElectronService , private databaseService : DatabaseService , private toastr : ToastrService) {
     this.setupSensorSubjects();
     
-    this.arduino1 = new ArduinoDevice("COM4",115200,true,electronService,this);
-    this.arduino2 = new ArduinoDevice("COM23",115200,true,electronService,this); 
-    //this.arduino3 = new ArduinoDevice("COM29",115200,true,electronService,this); 
+    this.arduino1 = new ArduinoDevice("COM4",115200,true,electronService,this); //CAUDAL-VOLUMEN
+    //this.arduino2 = new ArduinoDevice("COM23",115200,true,electronService,this);  //VALVULAS - PRESION
+    //this.arduino3 = new ArduinoDevice("COM29",115200,true,electronService,this);  //GPS - VELOCIDAD
   }
 
   inicializarContenedor(inicial: number, minimo: number): void {
@@ -114,69 +114,6 @@ export class ArduinoService {
     // Lógica adicional según tus necesidades
   }
 
-/*     async init (){
-      try {
-     
-
-        cronProd.start();
-
-        setTimeout(() => {
-          cronProd.update();
-          console.log(`Tiempo productivo: ${cronProd.time()}`);
-          cronProd.stop();
-
-          cronImprod.start();
-
-          setTimeout(() => {
-            cronImprod.update(); 
-            console.log(`Tiempo improductivo: ${cronImprod.time()}`);
-            cronImprod.stop();
-
-          },3000)
-
-        },5000);
-      } catch (error) {
-        
-      }
-    } */
-
-/*     async read_devices(){
-      let lastDate: Date = new Date();
-      let message: { [key: string]: number } = {};
-      for (const x of Object.values(Sensor)) {
-          if (typeof x === 'number' && x < Sensor.VALVE_LEFT) {
-              message[`${x}`] = 0.0;
-          }
-      }
-
-      let instance = this;
-
-      this.messageInterval = setInterval(function(){
-        console.log("Ingreso a la funcion read_device");
-        if (instance.devicesCant.length === 0){
-          //console.log("Ingreso a la condicional");
-          const readable_devices = instance.devicesCant.filter((x:any) => x.mode === Mode.ONLY_READ || x.mode === Mode.READ_WRITE);
-          console.log("readabale :", readable_devices);
-
-          // Asumiendo que message es un objeto en TypeScript
-          const valorSensor: number = message[Sensor.WATER_FLOW];
-
-          // Ahora, puedes usar valorSensor en tu condición
-          const is_improductive: boolean = valorSensor < 1;
-  
-          console.log("Impresion del sensor de watterflow" , valorSensor);
-          //console.log(is_improductive);
-          if(is_improductive){
-            console.log("Tiempo improductivo activado");
-          }else{
-            console.log("Tiempo productivo activado");
-          }
-          
-        }
-      },1000)
-    }
- */
-    
     //Metodo para getionar la presion - Regulador
     public regulatePressureWithBars(bars: number): void {
       const regulatorId = Sensor.PRESSURE_REGULATOR;
@@ -187,21 +124,20 @@ export class ArduinoService {
       //console.log('Enviando comando de regulación de presión...', barPressure);
   
       // Aquí deberías incluir la lógica para enviar el comando al dispositivo, por ejemplo:
-      this.arduino1.sendCommand(`${regulatorId}|${barPressure.toFixed(2)}`);
+      this.arduino2.sendCommand(`${regulatorId}|${barPressure.toFixed(2)}`);
     }
-
-
+ 
+    public resetVolumen(): void {
+      const command = 'B';
+      this.arduino1.sendCommand(command);
+    }
 
     // Método para activar la válvula izquierd
     public activateLeftValve(): void {
       const command = Sensor.VALVE_LEFT + '|1\n'; // Comando para activar la válvula izquierda
       this.arduino2.sendCommand(command);
     }
-
-    public resetVolumen(): void {
-      const command = 'B';
-      this.arduino1.sendCommand(command);
-    }
+  
   
     // Método para desactivar la válvula izquierda
     public deactivateLeftValve(): void {

@@ -59,6 +59,7 @@ export class AppComponent implements OnInit{
   constructor(private arduinoService : ArduinoService, private cdr: ChangeDetectorRef , private databaseService : DatabaseService , private toastr: ToastrService) {
   }
 
+  //Activar y desacctivar la valvulas izquierda
   toggleValvulaIzquierda():void{
     this.izquierdaActivada = !this.izquierdaActivada;
 
@@ -69,6 +70,7 @@ export class AppComponent implements OnInit{
     }
   }
 
+  //Activar y desactivar la valvula dereche
   toggleValvulaDerecha():void{
     this.derechaActivada = !this.derechaActivada;
 
@@ -80,6 +82,7 @@ export class AppComponent implements OnInit{
   
   }
 
+  //Regular la presion
   regulatePressure(): void {
     if (this.inputPressureValue !== undefined) {
       console.log(this.inputPressureValue);
@@ -87,8 +90,11 @@ export class AppComponent implements OnInit{
     }
   }
 
+  //Limpiar datos el arduino mediante el comando
   resetVolumen(): void {
     this.arduinoService.resetVolumen();
+    this.minVolume = 0;
+    this.currentVolume = 0;
   }
 
   
@@ -123,9 +129,11 @@ export class AppComponent implements OnInit{
       this.valorVolumen = this.currentVolume - valorDelSensor;
 
       if (this.valorVolumen < this.minVolume){
+        this.toastr.warning("Debe rellenar el tanque - Valvulas cerradas");
         this.arduinoService.deactivateRightValve();
         this.arduinoService.deactivateLeftValve();
-        this.toastr.info("Debe llenar el tanque - Valvulas cerradas");
+        this.toggleValvulaDerecha();
+        this.toggleValvulaIzquierda();
       }
 
       //this.currentVolume = this.currentVolume - this.valorVolumen;
