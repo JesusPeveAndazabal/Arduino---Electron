@@ -77,7 +77,7 @@ export class ArduinoService {
     this.setupSensorSubjects();
     
     this.arduino1 = new ArduinoDevice("COM4",115200,true,electronService,this); //CAUDAL-VOLUMEN
-    //this.arduino2 = new ArduinoDevice("COM23",115200,true,electronService,this);  //VALVULAS - PRESION
+    this.arduino2 = new ArduinoDevice("COM23",115200,true,electronService,this);  //VALVULAS - PRESION
     //this.arduino3 = new ArduinoDevice("COM29",115200,true,electronService,this);  //GPS - VELOCIDAD
   }
 
@@ -124,7 +124,7 @@ export class ArduinoService {
       //console.log('Enviando comando de regulación de presión...', barPressure);
   
       // Aquí deberías incluir la lógica para enviar el comando al dispositivo, por ejemplo:
-      this.arduino2.sendCommand(`${regulatorId}|${barPressure.toFixed(2)}`);
+      this.arduino2.sendCommand(`${regulatorId}|${barPressure.toFixed(1)}`);
     }
  
     public resetVolumen(): void {

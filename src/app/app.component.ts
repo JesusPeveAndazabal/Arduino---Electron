@@ -132,8 +132,8 @@ export class AppComponent implements OnInit{
         this.toastr.warning("Debe rellenar el tanque - Valvulas cerradas");
         this.arduinoService.deactivateRightValve();
         this.arduinoService.deactivateLeftValve();
-        this.toggleValvulaDerecha();
-        this.toggleValvulaIzquierda();
+        //this.toggleValvulaDerecha();
+        //this.toggleValvulaIzquierda();
       }
 
       //this.currentVolume = this.currentVolume - this.valorVolumen;
@@ -141,8 +141,7 @@ export class AppComponent implements OnInit{
 
       //Forzar la vista de angular
       this.cdr.detectChanges();
-      
-      // Actualizar la interfaz de usuario u realizar acciones adicionales aquí
+  
     });
 
     //PH -- POR EL MOMENTO NO SE USARA 
