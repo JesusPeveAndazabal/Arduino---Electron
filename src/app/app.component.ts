@@ -28,7 +28,6 @@ import { Product } from './core/models/product';
 })
 
 export class AppComponent implements OnInit{
-  products: Product[] = [];
   valorWatterflow: number | undefined; 
   valorVolumen: number | undefined; 
   valorPH: number | undefined; 
@@ -56,47 +55,10 @@ export class AppComponent implements OnInit{
     inputValue: new FormControl(''), // Puedes proporcionar un valor inicial aquí si lo deseas
   });
 
+
+
   constructor(private arduinoService : ArduinoService, private cdr: ChangeDetectorRef , private databaseService : DatabaseService , private toastr: ToastrService) {
   }
-
-  //Activar y desacctivar la valvulas izquierda
-  toggleValvulaIzquierda():void{
-    this.izquierdaActivada = !this.izquierdaActivada;
-
-    if(this.izquierdaActivada){
-      this.arduinoService.activateLeftValve();
-    }else{
-      this.arduinoService.deactivateLeftValve();
-    }
-  }
-
-  //Activar y desactivar la valvula dereche
-  toggleValvulaDerecha():void{
-    this.derechaActivada = !this.derechaActivada;
-
-    if(this.derechaActivada){
-      this.arduinoService.activateRightValve();
-    }else{
-      this.arduinoService.deactivateRightValve();
-    }
-  
-  }
-
-  //Regular la presion
-  regulatePressure(): void {
-    if (this.inputPressureValue !== undefined) {
-      console.log(this.inputPressureValue);
-     this.arduinoService.regulatePressureWithBars(this.inputPressureValue);
-    }
-  }
-
-  //Limpiar datos el arduino mediante el comando
-  resetVolumen(): void {
-    this.arduinoService.resetVolumen();
-    this.minVolume = 0;
-    this.currentVolume = 0;
-  }
-
   
   async ngOnInit() {
 
@@ -185,6 +147,23 @@ export class AppComponent implements OnInit{
 
   }
 
+  toggleValvulaDerecha():void{
+    this.arduinoService.toggleValvulaDerecha();
+  }
+
+    //Activar y desacctivar la valvulas izquierda
+  toggleValvulaIzquierda():void{
+    this.arduinoService.toggleValvulaIzquierda();
+  }
+
+  regulatePressure(){
+    this.arduinoService.inputPressureValue = this.inputPressureValue;
+    this.arduinoService.regulatePressure();
+  }
+
+  resetVolumen(): void {
+    this.arduinoService.resetVolumen();
+  }
 
   ngOnDestroy() {
     // Desinscribirse para evitar pérdidas de memoria

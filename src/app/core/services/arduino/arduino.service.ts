@@ -15,8 +15,6 @@ import { Queue } from 'queue-typescript';
 import { Mode } from '../../utils/global'; 
 import { devices } from 'playwright';
 
-
-
 //Este se comporta como el device_manager
 
 @Injectable({
@@ -41,9 +39,6 @@ export class ArduinoService {
 
   private work_first_started : boolean = false;
   
-
-  
-
   /* config: Config | null = null; */
 
   current_volume = 0;
@@ -70,14 +65,20 @@ export class ArduinoService {
   private last_date = new Date(); 
   private currentVolume: number = 100.0; // Volumen inicial en litros
   private minVolume: number = 10.0; // Volumen mínimo deseado en litros
+
+  izquierdaActivada = false;
+  derechaActivada = false;
+
+  inputPressureValue: number | undefined;
+
   
   private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
  
   constructor( private electronService: ElectronService , private databaseService : DatabaseService , private toastr : ToastrService) {
     this.setupSensorSubjects();
     
-    this.arduino1 = new ArduinoDevice("COM4",115200,true,electronService,this); //CAUDAL-VOLUMEN
-    this.arduino2 = new ArduinoDevice("COM23",115200,true,electronService,this);  //VALVULAS - PRESION
+    this.arduino1 = new ArduinoDevice("COM6",115200,true,electronService,this); //CAUDAL-VOLUMEN
+    this.arduino2 = new ArduinoDevice("COM12",115200,true,electronService,this);  //VALVULAS - PRESION
     //this.arduino3 = new ArduinoDevice("COM29",115200,true,electronService,this);  //GPS - VELOCIDAD
   }
 
@@ -87,34 +88,7 @@ export class ArduinoService {
     this.nivelMinimo = minimo;
   }
 
-  // Función para procesar datos del volumen y caudal
-  procesarDatos(sensor: number, value: number): void {
-    if (sensor === Sensor.VOLUME) {
-      // Actualizar el valor normal del volumen
-      const message = { [`${sensor}`]: value };
-
-      // Calcular valor del volumen real del contenedor para mostrar en la app
-      sensor = Sensor.VOLUME_CONTAINER;
-      this.currentRealVolume -= value;
-      value = this.currentRealVolume;
-
-      // Verificar si el volumen real actual pasó el límite y cerrar las válvulas
-      if (this.currentRealVolume <= this.nivelMinimo) {
-        if (this.isRunning) {
-          
-          // Aquí puedes agregar la lógica para mostrar una alerta o realizar otras acciones necesarias
-        }
-        this.isRunning = false;
-        // Aquí puedes agregar más lógica según tus necesidades
-      }
-
-      message[`${sensor}`] = value;
-    }
-
-    // Lógica adicional según tus necesidades
-  }
-
-    //Metodo para getionar la presion - Regulador
+    //Metodo para enviar el valor de presion que se le asignara
     public regulatePressureWithBars(bars: number): void {
       const regulatorId = Sensor.PRESSURE_REGULATOR;
       
@@ -127,17 +101,17 @@ export class ArduinoService {
       this.arduino2.sendCommand(`${regulatorId}|${barPressure.toFixed(1)}`);
     }
  
-    public resetVolumen(): void {
+    //Metodo para resetear el volumen inicial y minimo
+    public resetVolumenInit(): void {
       const command = 'B';
       this.arduino1.sendCommand(command);
     }
 
-    // Método para activar la válvula izquierd
+    // Método para activar la válvula izquierda
     public activateLeftValve(): void {
       const command = Sensor.VALVE_LEFT + '|1\n'; // Comando para activar la válvula izquierda
       this.arduino2.sendCommand(command);
     }
-  
   
     // Método para desactivar la válvula izquierda
     public deactivateLeftValve(): void {
@@ -156,6 +130,45 @@ export class ArduinoService {
       const command = Sensor.VALVE_RIGHT + '|0\n'; // Comando para desactivar la válvula derecha
       this.arduino2.sendCommand(command);
     }
+
+    //Fucnion para abrir y cerrar electrovalvulas
+    toggleValvulaDerecha():void{
+      this.derechaActivada = !this.derechaActivada;
+  
+      if(this.derechaActivada){
+        this.activateRightValve();
+      }else{
+        this.deactivateRightValve();
+      }
+    
+    }
+
+      //Activar y desacctivar la valvulas izquierda
+    toggleValvulaIzquierda():void{
+      this.izquierdaActivada = !this.izquierdaActivada;
+
+      if(this.izquierdaActivada){
+        this.activateLeftValve();
+      }else{
+        this.deactivateLeftValve();
+      }
+    }
+
+    //Regular la presion
+    regulatePressure(): void {
+      if (this.inputPressureValue !== undefined) {
+        console.log(this.inputPressureValue);
+      this.regulatePressureWithBars(this.inputPressureValue);
+      }
+    }
+
+    //Limpiar datos el arduino mediante el comando
+    resetVolumen(): void {
+      this.resetVolumenInit();
+      this.minVolume = 0;
+      this.currentVolume = 0;
+    }
+
   
   //Este es el encargado de generar y emitir eventos de actualización
   private setupSensorSubjects(): void {
