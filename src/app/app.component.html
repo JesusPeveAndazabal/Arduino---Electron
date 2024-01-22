@@ -6,6 +6,21 @@
     <title>Document</title>
 </head>
 <body>
+    <div class="row mt-5" style="align-items: center;">
+      <div class="col-md-4">
+        
+      </div>
+      <div class="col-md-4">
+        <button (click)="cambiarEstadoBoton()" [ngClass]="{'encendido': isRunning, 'apagado': !isRunning}">
+          <i class="fas fa-power-off"></i> {{ isRunning ? 'Encendido' : 'Apagado' }}
+        </button>
+      </div>
+      <div class="col-md-4">
+        <p>Tiempo Improductivo: {{ obtenerTiempoImproductivo() }} segundos</p><br>
+        <p>Tiempo Productivo: {{ obtenerTiempoProductivo() }} segundos</p>
+      </div>
+      
+    </div>
 
     <div class="row mt-5" style="align-items: center;">
         <div class="col-md-3 d-flex align-items-center justify-content-center">

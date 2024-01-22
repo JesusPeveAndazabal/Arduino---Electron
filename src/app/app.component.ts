@@ -43,6 +43,8 @@ export class AppComponent implements OnInit{
   currentVolume: number = 0;
   currentRealVolume: number = 0;
 
+  isRunning : boolean = false;
+
   // Nuevos valores para el contenedor
   nivelInicial: number = 100;
   nivelMinimo: number = 20;
@@ -68,13 +70,22 @@ export class AppComponent implements OnInit{
     
     // En algún lugar de tu aplicación donde desees ajustar la presión
     //this.arduinoService.regulatePressureWithBars(0.30); // Reemplaza 3.0 con el valor deseado
-    
+
+   
+
+
     //CAUDAL 
     this.arduinoService.getSensorObservable(Sensor.WATER_FLOW).subscribe((valorDelSensor) => {
       //this.arduinoService.notifySensorWatterflow(Sensor.WATER_FLOW , valorDelSensor);
       this.valorWatterflow = valorDelSensor;
-    
+      console.log("Sensor de caudal" , this.valorWatterflow);
       
+      if(this.valorWatterflow <= 0 ){
+        this.arduinoService.iniciarContadorImproductivo();
+      }else if(this.valorWatterflow > 0){
+        this.arduinoService.detenerContadorImproductivo();
+      } 
+
       // Calcula el volumen en tiempo real según el caudal real
       //this.currentVolume -= valorDelSensor; // Ajusta la lógica según tus necesidades
       
@@ -91,7 +102,7 @@ export class AppComponent implements OnInit{
       this.valorVolumen = this.currentVolume - valorDelSensor;
 
       if (this.valorVolumen < this.minVolume){
-        this.toastr.warning("Debe rellenar el tanque - Valvulas cerradas");
+        //this.toastr.warning("Debe rellenar el tanque - Valvulas cerradas");
         this.arduinoService.deactivateRightValve();
         this.arduinoService.deactivateLeftValve();
         //this.toggleValvulaDerecha();
@@ -145,6 +156,8 @@ export class AppComponent implements OnInit{
       this.cdr.detectChanges();
     });
 
+    
+
   }
 
   toggleValvulaDerecha():void{
@@ -164,6 +177,43 @@ export class AppComponent implements OnInit{
   resetVolumen(): void {
     this.arduinoService.resetVolumen();
   }
+/* 
+  iniciarContadorProductivo(): void {
+    this.arduinoService.iniciarContadorProductivo();
+  }
+
+  detenerContadorProductivo(): void {
+    this.arduinoService.detenerContadorProductivo();
+  } */
+
+  obtenerTiempoProductivo(): string {
+    return this.obtenerTiempoFormateado(this.arduinoService.obtenerTiempoProductivo());
+  }
+
+ /*  iniciarContadorImproductivo(): void {
+    this.arduinoService.iniciarContadorImproductivo();
+  }
+
+  detenerContadorImproductivo(): void {
+    this.arduinoService.detenerContadorImproductivo();
+  } */
+
+  obtenerTiempoImproductivo(): string {
+    return this.obtenerTiempoFormateado(this.arduinoService.obtenerTiempoImproductivo());
+  }
+
+  obtenerTiempoFormateado(tiempo: number): string {
+    const horas = Math.floor(tiempo / 3600);
+    const minutos = Math.floor((tiempo % 3600) / 60);
+    const segundos = tiempo % 60;
+
+    return `${horas}h ${minutos}m ${segundos}s`;
+  }
+
+  cambiarEstadoBoton(): void {
+    this.isRunning = !this.isRunning;
+  }
+
 
   ngOnDestroy() {
     // Desinscribirse para evitar pérdidas de memoria

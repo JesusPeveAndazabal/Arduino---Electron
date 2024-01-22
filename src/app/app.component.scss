@@ -18,6 +18,16 @@ body {
     animation: floatWater 2s ease-in-out infinite;
 }
 
+.encendido {
+    background-color: green;
+    color: white;
+  }
+  
+.apagado {
+    background-color: red;
+    color: white;
+}
+
 @keyframes floatWater {
     0%, 100% {
         transform: translate(-50%, -50%) translateY(0);
