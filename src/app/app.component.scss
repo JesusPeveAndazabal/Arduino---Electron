@@ -18,14 +18,12 @@ body {
     animation: floatWater 2s ease-in-out infinite;
 }
 
-.encendido {
-    background-color: green;
-    color: white;
+.on {
+    color: green;
   }
   
-.apagado {
-    background-color: red;
-    color: white;
+.off {
+    color : red;
 }
 
 @keyframes floatWater {

@@ -28,17 +28,20 @@ export class ArduinoService {
   arduino1! : ArduinoDevice;
   arduino2! : ArduinoDevice;
   arduino3! : ArduinoDevice;
-
-  private work : any;
-  private firstRun : boolean = false;
-
-  private work_first_started : boolean = false;
   
-  /* config: Config | null = null; */
-
   current_volume = 0;
   current_real_volume = 0;
   min_volumen = 0;
+
+  timer: any;
+  currentTime: number = 0;
+
+
+  cronometroActivo: boolean = false;
+  tiempoProductivo: number = 0;
+  tiempoImproductivo: number = 0;
+  inicioTiempoProductivo: number = 0;
+  inicioTiempoImproductivo: number = 0;
 
 
   // Valores iniciales y mínimos del contenedor
@@ -63,27 +66,18 @@ export class ArduinoService {
   izquierdaActivada = false;
   derechaActivada = false;
 
-
-  private tiempoProductivoInterval: any; // Intervalo para actualizar el contador productivo
-  private tiempoImproductivoInterval: any; // Intervalo para actualizar el contador improductivo
-
-  // Modifica la declaración de tiempoProductivo y tiempoImproductivo
-  tiempoProductivo: Date = new Date(0);
-  tiempoImproductivo: Date = new Date(0);
- 
-
-
   inputPressureValue: number | undefined;
 
   
   private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
+  isRunning: boolean = false;
  
   constructor( private electronService: ElectronService , private databaseService : DatabaseService , private toastr : ToastrService) {
     this.setupSensorSubjects();
     
-    this.arduino1 = new ArduinoDevice("COM33",115200,true,electronService,this); //CAUDAL-VOLUMEN
-    this.arduino2 = new ArduinoDevice("COM34",115200,true,electronService,this);  //VALVULAS - PRESION
-    //this.arduino3 = new ArduinoDevice("COM29",115200,true,electronService,this);  //GPS - VELOCIDAD
+    this.arduino1 = new ArduinoDevice("COM32",115200,true,electronService,this); //CAUDAL-VOLUMEN
+    this.arduino2 = new ArduinoDevice("COM35",115200,true,electronService,this);  //VALVULAS - PRESION
+    //this.arduino3 = new ArduinoDevice("COM11",115200,true,electronService,this);  //GPS - VELOCIDAD
   }
 
   inicializarContenedor(inicial: number, minimo: number): void {
@@ -134,9 +128,7 @@ export class ArduinoService {
       const command = Sensor.VALVE_RIGHT + '|0\n'; // Comando para desactivar la válvula derecha
       this.arduino2.sendCommand(command);
     }
-
     
-
     //Fucnion para abrir y cerrar electrovalvulas
     toggleValvulaDerecha():void{
       this.derechaActivada = !this.derechaActivada;
@@ -166,7 +158,7 @@ export class ArduinoService {
         console.log(this.inputPressureValue);
       this.regulatePressureWithBars(this.inputPressureValue);
       }
-    }
+    } 
 
     //Limpiar datos el arduino mediante el comando
     resetVolumen(): void {
@@ -175,41 +167,13 @@ export class ArduinoService {
       this.currentVolume = 0;
     }
 
-// Modifica la lógica de iniciarContadorProductivo
-iniciarContadorProductivo(): void {
-  this.tiempoProductivoInterval = setInterval(() => {
-    // Añade un segundo al tiempoProductivo
-    this.tiempoProductivo.setSeconds(this.tiempoProductivo.getSeconds() + 1);
-
-    // Puedes almacenar el tiempo formateado en una variable si lo necesitas en otro lugar
-    this.tiempoProductivoFormateado = this.formatoFechaHora(this.tiempoProductivo);
-  }, 1000); // Actualiza el contador cada segundo
-}
-
-// Modifica la lógica de iniciarContadorImproductivo
-iniciarContadorImproductivo(): void {
-  this.tiempoImproductivoInterval = setInterval(() => {
-    // Añade un segundo al tiempoImproductivo
-    this.tiempoImproductivo.setSeconds(this.tiempoImproductivo.getSeconds() + 1);
-
-    // Puedes almacenar el tiempo formateado en una variable si lo necesitas en otro lugar
-    this.tiempoImproductivoFormateado = this.formatoFechaHora(this.tiempoImproductivo);
-  }, 1000); // Actualiza el contador cada segundo
-}
-
-// Función para formatear el objeto Date como "HH:mm:ss"
-formatoFechaHora(fecha: Date): string {
-  const horas = fecha.getUTCHours();
-  const minutos = fecha.getUTCMinutes();
-  const segundos = fecha.getUTCSeconds();
-  return `${this.formatoDosDigitos(horas)}:${this.formatoDosDigitos(minutos)}:${this.formatoDosDigitos(segundos)}`;
-}
-
-// Función para agregar un cero delante si el valor es menor a 10
-formatoDosDigitos(valor: number): string {
-  return valor < 10 ? `0${valor}` : `${valor}`;
-}
   
+    
+    // Esta función se puede llamar cuando se detiene la aplicación para guardar el tiempo actual
+    saveCurrentTime(): void {
+      // Puedes almacenar this.currentTime en algún lugar, como en el almacenamiento local
+    }
+
   //Este es el encargado de generar y emitir eventos de actualización
   private setupSensorSubjects(): void {
       // Crear Subject para cada tipo de sensor

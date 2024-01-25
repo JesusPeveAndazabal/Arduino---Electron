@@ -28,7 +28,7 @@ import { Product } from './core/models/product';
 })
 
 export class AppComponent implements OnInit{
-  valorWatterflow: number | undefined; 
+  valorWatterflow: number = 0; 
   valorVolumen: number | undefined; 
   valorPH: number | undefined; 
   valorGPS: number | undefined; 
@@ -38,20 +38,40 @@ export class AppComponent implements OnInit{
   private sensorSubscription: Subscription | undefined;
   izquierdaActivada = false;
   derechaActivada = false;
+  
 
   minVolume: number = 0;
   currentVolume: number = 0;
   currentRealVolume: number = 0;
 
-  isRunning : boolean = false;
+  isRunning: boolean = false;
+  
+  timerProductive: any;
+  currentTimeProductive: number = 0;
+
+  timerImproductive: any;
+  currentTimeImproductive: number = 0;
+
+  valorWatterflowMenor0 : number = 0;
+  valorWatterflowMayor0 : number = 0;
+  
 
   // Nuevos valores para el contenedor
   nivelInicial: number = 100;
   nivelMinimo: number = 20;
 
+  cronometroActivo: boolean = false;
+  tiempoProductivo: number = 0;
+  tiempoImproductivo: number = 0;
+  inicioTiempoProductivo: number = 0;
+  inicioTiempoImproductivo: number = 0;
+
   inputLitrosValue: number | undefined;
 
   inputPressureValue: number | undefined; 
+
+  
+
 
   formulario = new FormGroup({
     inputValue: new FormControl(''), // Puedes proporcionar un valor inicial aquí si lo deseas
@@ -70,30 +90,21 @@ export class AppComponent implements OnInit{
     
     // En algún lugar de tu aplicación donde desees ajustar la presión
     //this.arduinoService.regulatePressureWithBars(0.30); // Reemplaza 3.0 con el valor deseado
-
-   
+     
 
 
     //CAUDAL 
     this.arduinoService.getSensorObservable(Sensor.WATER_FLOW).subscribe((valorDelSensor) => {
       //this.arduinoService.notifySensorWatterflow(Sensor.WATER_FLOW , valorDelSensor);
       this.valorWatterflow = valorDelSensor;
-      console.log("Sensor de caudal" , this.valorWatterflow);
+      console.log("Impresion del is running dentro del caudal" , this.isRunning);
       
-      if(this.valorWatterflow <= 0 ){
-        this.arduinoService.iniciarContadorImproductivo();
-      }else if(this.valorWatterflow > 0){
-        this.arduinoService.detenerContadorImproductivo();
-      } 
+      if(this.valorWatterflow < 0){
+        
+      }
 
-      // Calcula el volumen en tiempo real según el caudal real
-      //this.currentVolume -= valorDelSensor; // Ajusta la lógica según tus necesidades
-      
-      //Forzar la vista de angular
+     //Forzar la vista de angular
       this.cdr.detectChanges();
-      //this.arduinoService.notifySensorWatterflow(Sensor.WATER_FLOW , valorDelSensor);
-      
-      // Actualizar la interfaz de usuario u realizar acciones adicionales aquí
     });
 
     //VOLUMEN
@@ -102,7 +113,7 @@ export class AppComponent implements OnInit{
       this.valorVolumen = this.currentVolume - valorDelSensor;
 
       if (this.valorVolumen < this.minVolume){
-        //this.toastr.warning("Debe rellenar el tanque - Valvulas cerradas");
+        this.toastr.warning("Debe rellenar el tanque - Valvulas cerradas");
         this.arduinoService.deactivateRightValve();
         this.arduinoService.deactivateLeftValve();
         //this.toggleValvulaDerecha();
@@ -154,17 +165,28 @@ export class AppComponent implements OnInit{
       console.log("Valor de la presion" , valorDelSensor);
       this.valorPressure = valorDelSensor;
       this.cdr.detectChanges();
-    });
+    });    
 
-    
+  }
 
+  IniciarApp(): void {
+    this.isRunning = !this.isRunning;
+    console.log("valor del caudal en iniciarapp")
+    if (this.isRunning && this.valorWatterflow > 0) {
+      console.log("Ingreso a la condicion si es true la varibale isRunning")
+      this.resumeTimerProductive();
+      this.pauseTimerImproductive();
+    } else {
+      this.resumeTimerImproductive();
+      this.pauseTimerProductive();
+    }
   }
 
   toggleValvulaDerecha():void{
     this.arduinoService.toggleValvulaDerecha();
   }
 
-    //Activar y desacctivar la valvulas izquierda
+  //Activar y desacctivar la valvulas izquierda
   toggleValvulaIzquierda():void{
     this.arduinoService.toggleValvulaIzquierda();
   }
@@ -177,42 +199,68 @@ export class AppComponent implements OnInit{
   resetVolumen(): void {
     this.arduinoService.resetVolumen();
   }
-/* 
-  iniciarContadorProductivo(): void {
-    this.arduinoService.iniciarContadorProductivo();
+
+  //Pausar tiempo productivo
+  pauseTimerProductive(): void {
+    clearInterval(this.timerProductive);
+    this.isRunning = false;
   }
 
-  detenerContadorProductivo(): void {
-    this.arduinoService.detenerContadorProductivo();
-  } */
-
-  obtenerTiempoProductivo(): string {
-    return this.obtenerTiempoFormateado(this.arduinoService.obtenerTiempoProductivo());
+  //Pausar tiempo Improductivo
+  pauseTimerImproductive(): void {
+    clearInterval(this.timerImproductive);
+    this.isRunning = true;
   }
 
- /*  iniciarContadorImproductivo(): void {
-    this.arduinoService.iniciarContadorImproductivo();
+  //Reanudar tiempo productivo
+  resumeTimerProductive(): void {
+    this.startTimerProductive();
   }
 
-  detenerContadorImproductivo(): void {
-    this.arduinoService.detenerContadorImproductivo();
-  } */
-
-  obtenerTiempoImproductivo(): string {
-    return this.obtenerTiempoFormateado(this.arduinoService.obtenerTiempoImproductivo());
+   //Reanudar tiempo Improductivo
+  resumeTimerImproductive(): void {
+    this.startTimerImproductive();
   }
 
-  obtenerTiempoFormateado(tiempo: number): string {
-    const horas = Math.floor(tiempo / 3600);
-    const minutos = Math.floor((tiempo % 3600) / 60);
-    const segundos = tiempo % 60;
-
-    return `${horas}h ${minutos}m ${segundos}s`;
+  //Reiniciar tiempo productivo
+  resetTimerProductive(): void {
+    this.currentTimeProductive = 0;
   }
 
-  cambiarEstadoBoton(): void {
-    this.isRunning = !this.isRunning;
+   //Reiniciar tiempo Improductivo
+   resetTimerImproductive(): void {
+    this.currentTimeImproductive = 0;
   }
+
+  //Fucnion para tiempo productivo
+  startTimerProductive(): void {
+    this.timerProductive = setInterval(() => {
+      this.currentTimeProductive++;
+    }, 1000);
+    this.isRunning = true;
+  }
+
+  //Funcion para tiempo improductivo
+  startTimerImproductive(): void {
+    this.timerImproductive = setInterval(() => {
+      this.currentTimeImproductive++;
+    }, 1000);
+    this.isRunning = false;
+  }
+
+  formatTime(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+
+    const formattedHours = hours < 10 ? `0${hours}` : hours;
+    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+    const formattedSeconds = remainingSeconds < 10 ? `0${remainingSeconds}` : remainingSeconds;
+
+    return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+  }
+
+
 
 
   ngOnDestroy() {

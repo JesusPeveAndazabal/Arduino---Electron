@@ -7,22 +7,6 @@
 </head>
 <body>
     <div class="row mt-5" style="align-items: center;">
-      <div class="col-md-4">
-        
-      </div>
-      <div class="col-md-4">
-        <button (click)="cambiarEstadoBoton()" [ngClass]="{'encendido': isRunning, 'apagado': !isRunning}">
-          <i class="fas fa-power-off"></i> {{ isRunning ? 'Encendido' : 'Apagado' }}
-        </button>
-      </div>
-      <div class="col-md-4">
-        <p>Tiempo Improductivo: {{ obtenerTiempoImproductivo() }} segundos</p><br>
-        <p>Tiempo Productivo: {{ obtenerTiempoProductivo() }} segundos</p>
-      </div>
-      
-    </div>
-
-    <div class="row mt-5" style="align-items: center;">
         <div class="col-md-3 d-flex align-items-center justify-content-center">
           <form>
             <div class="form-group">
@@ -95,7 +79,6 @@
 
     <div class="row">
 
-      <div class="col-md-4"></div>
       <div class="col-md-4">
         <div class="card" style="width: 10rem; align-items: center;">
           <img src="./assets/images/icongps.png" class="card-img-top" alt="..." style="width: 50%;">
@@ -104,7 +87,6 @@
           </div>
         </div>
       </div>
-
       <div class="col-md-4">
         <div class="card" style="width: 10rem; align-items: center;">
           <img src="./assets/images/velocidadicon.png" class="card-img-top" alt="..." style="width: 50%;">
@@ -114,12 +96,22 @@
         </div>
       </div>
 
-    </div> 
+      <div class="col-md-4">
+        <h6>Tiempo Productivo : {{ formatTime(currentTimeProductive) }}</h6>
+        <h6>Tiempo Improductivo : {{ formatTime(currentTimeImproductive) }}</h6>
+        <button (click)="IniciarApp()" style="border-radius: 50%;">
+          <ng-container *ngIf="isRunning; else encendidoTemplate">
+            <i class="fas fa-power-off on"></i> <!-- Apagado -->
+          </ng-container>
+          <ng-template #encendidoTemplate>
+            <i class="fas fa-power-off off"></i> <!-- Encendido -->
+          </ng-template>
+        </button>
+        <button (click)="resetTimerProductive()">Reset Productive</button>
+        <button (click)="resetTimerImproductive()">Reset Improductive</button>
+      </div>
 
-   
- 
-  
-  
+    </div>   
 
 </body>
 </html>
