@@ -23,11 +23,11 @@ import { start } from 'repl';
 })
 
 export class ArduinoService {
+  listArduinos : ArduinoDevice[] = [];
 
-
-  arduino1! : ArduinoDevice;
-  arduino2! : ArduinoDevice;
-  arduino3! : ArduinoDevice;
+  // arduino1! : ArduinoDevice;
+  // arduino2! : ArduinoDevice;
+  // arduino3! : ArduinoDevice;
   
   current_volume = 0;
   current_real_volume = 0;
@@ -82,9 +82,13 @@ export class ArduinoService {
   constructor( private electronService: ElectronService , private databaseService : DatabaseService , private toastr : ToastrService) {
     this.setupSensorSubjects();
     
-    this.arduino1 = new ArduinoDevice("COM30",115200,true,electronService,this); //CAUDAL-VOLUMEN
-    this.arduino2 = new ArduinoDevice("COM36",115200,true,electronService,this);  //VALVULAS - PRESION
-    this.arduino3 = new ArduinoDevice("COM29",115200,true,electronService,this);  //GPS - VELOCIDAD
+    // this.arduino1 = new ArduinoDevice("COM30",115200,true,electronService,this); //CAUDAL-VOLUMEN
+    // this.arduino2 = new ArduinoDevice("COM36",115200,true,electronService,this);  //VALVULAS - PRESION
+    // this.arduino3 = new ArduinoDevice("COM29",115200,true,electronService,this);  //GPS - VELOCIDAD
+  }
+
+  findBySensor(sensor : number): ArduinoDevice{
+    return this.listArduinos.find(p => p.sensors.some(x => x == sensor))!;
   }
 
   inicializarContenedor(inicial: number, minimo: number): void {
@@ -103,37 +107,38 @@ export class ArduinoService {
       //console.log('Enviando comando de regulación de presión...', barPressure);
   
       // Aquí deberías incluir la lógica para enviar el comando al dispositivo, por ejemplo:
-      this.arduino2.sendCommand(`${regulatorId}|${barPressure.toFixed(1)}`);
+      this.findBySensor(regulatorId).sendCommand(`${regulatorId}|${barPressure.toFixed(1)}`);
     }
  
     //Metodo para resetear el volumen inicial y minimo
     public resetVolumenInit(): void {
       const command = 'B';
-      this.arduino1.sendCommand(command);
+      this.findBySensor(Sensor.VOLUME).sendCommand(command);
     }
 
     // Método para activar la válvula izquierda
     public activateLeftValve(): void {
       const command = Sensor.VALVE_LEFT + '|1\n'; // Comando para activar la válvula izquierda
-      this.arduino2.sendCommand(command);
+      this.findBySensor(Sensor.VALVE_LEFT).sendCommand(command);
     }
   
     // Método para desactivar la válvula izquierda
     public deactivateLeftValve(): void {
       const command = Sensor.VALVE_LEFT  + '|0\n'; // Comando para desactivar la válvula izquierda
-      this.arduino2.sendCommand(command);
+      this.findBySensor(Sensor.VALVE_LEFT).sendCommand(command);
     }
   
     // Método para activar la válvula derecha 
     public activateRightValve(): void {
       const command = Sensor.VALVE_RIGHT + '|1\n'; // Comando para activar la válvula derecha
-      this.arduino2.sendCommand(command);
+      this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(command);
     }
   
     // Método para desactivar la válvula derecha
     public deactivateRightValve(): void {
       const command = Sensor.VALVE_RIGHT + '|0\n'; // Comando para desactivar la válvula derecha
-      this.arduino2.sendCommand(command);
+      this.findBySensor(Sensor.VALVE_RIGHT
+        ).sendCommand(command);
     }
     
     //Fucnion para abrir y cerrar electrovalvulas

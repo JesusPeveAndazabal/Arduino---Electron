@@ -29,6 +29,7 @@ export class DatabaseService extends ElectronService {
   constructor() {
     super();
     if(this.isElectron){
+      console.log("Ingresa a la condicion");
       this.file = this.path.resolve("bd/", "database.sqlite");
       //this.file = "C:/Users/BETA/Documents/proyectos/ScaleApp/src/assets/database.sqlite"
     }
