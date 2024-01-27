@@ -44,13 +44,21 @@ export class AppComponent implements OnInit{
   currentVolume: number = 0;
   currentRealVolume: number = 0;
 
+  cronometroProductivo: number = 0;
+  cronometroImproductivo: number = 0;
+  enModoProductivo: boolean = false;
+  velocidadCronometro: number = 1;
+
+  botonEncendido: boolean = false;
+
+
   isRunning: boolean = false;
   
-  timerProductive: any;
+/*   timerProductive: any;
   currentTimeProductive: number = 0;
 
   timerImproductive: any;
-  currentTimeImproductive: number = 0;
+  currentTimeImproductive: number = 0; */
 
   valorWatterflowMenor0 : number = 0;
   valorWatterflowMayor0 : number = 0;
@@ -59,12 +67,6 @@ export class AppComponent implements OnInit{
   // Nuevos valores para el contenedor
   nivelInicial: number = 100;
   nivelMinimo: number = 20;
-
-  cronometroActivo: boolean = false;
-  tiempoProductivo: number = 0;
-  tiempoImproductivo: number = 0;
-  inicioTiempoProductivo: number = 0;
-  inicioTiempoImproductivo: number = 0;
 
   inputLitrosValue: number | undefined;
 
@@ -92,20 +94,6 @@ export class AppComponent implements OnInit{
     //this.arduinoService.regulatePressureWithBars(0.30); // Reemplaza 3.0 con el valor deseado
      
 
-
-    //CAUDAL 
-    this.arduinoService.getSensorObservable(Sensor.WATER_FLOW).subscribe((valorDelSensor) => {
-      //this.arduinoService.notifySensorWatterflow(Sensor.WATER_FLOW , valorDelSensor);
-      this.valorWatterflow = valorDelSensor;
-      console.log("Impresion del is running dentro del caudal" , this.isRunning);
-      
-      if(this.valorWatterflow < 0){
-        
-      }
-
-     //Forzar la vista de angular
-      this.cdr.detectChanges();
-    });
 
     //VOLUMEN
     this.arduinoService.getSensorObservable(Sensor.VOLUME).subscribe((valorDelSensor) => {
@@ -169,17 +157,54 @@ export class AppComponent implements OnInit{
 
   }
 
-  IniciarApp(): void {
-    this.isRunning = !this.isRunning;
-    console.log("valor del caudal en iniciarapp")
-    if (this.isRunning && this.valorWatterflow > 0) {
-      console.log("Ingreso a la condicion si es true la varibale isRunning")
-      this.resumeTimerProductive();
-      this.pauseTimerImproductive();
-    } else {
-      this.resumeTimerImproductive();
-      this.pauseTimerProductive();
+  toggleBotonEncendido() {
+    this.botonEncendido = !this.botonEncendido;
+    console.log("Impresion" ,this.botonEncendido);
+    if (!this.botonEncendido) {
+      console.log("Ingreso a la condicional de formateo de valores ");
+      // Si el botón se apaga, reiniciar todos los valores relacionados con los cronómetros
+      this.cronometroProductivo = 0;
+      this.cronometroImproductivo = 0;
+      this.enModoProductivo = false;
+      //this.ultimoTiempoProductivo = 0;
     }
+
+    if(this.botonEncendido){
+      this.iniciarCronometro();
+    }
+  }
+
+  iniciarCronometro(){
+    if (!this.botonEncendido){
+      console.log("Ingreso a la condicional de boton encendido")
+      return;
+    }
+
+    console.log("Seguimiento del script");
+    
+    //CAUDAL 
+    this.arduinoService.getSensorObservable(Sensor.WATER_FLOW).subscribe((valorDelSensor) => {
+      //this.arduinoService.notifySensorWatterflow(Sensor.WATER_FLOW , valorDelSensor);
+      this.valorWatterflow = valorDelSensor;
+
+      if (this.valorWatterflow > 0 && !this.enModoProductivo) {
+        // Cambio a modo productivo solo si venía de modo improductivo
+        this.enModoProductivo = true;
+      } else if (this.valorWatterflow <= 0 && this.enModoProductivo) {
+        // Cambio a modo improductivo solo si venía de modo productivo
+        this.enModoProductivo = false;
+      } else {
+        // Continuar en el modo actual
+        if (this.enModoProductivo) {0
+          this.cronometroProductivo += this.velocidadCronometro;
+        } else {
+          this.cronometroImproductivo += this.velocidadCronometro;
+        }
+      }
+
+     //Forzar la vista de angular
+      this.cdr.detectChanges();
+    });
   }
 
   toggleValvulaDerecha():void{
@@ -199,7 +224,7 @@ export class AppComponent implements OnInit{
   resetVolumen(): void {
     this.arduinoService.resetVolumen();
   }
-
+/* 
   //Pausar tiempo productivo
   pauseTimerProductive(): void {
     clearInterval(this.timerProductive);
@@ -246,20 +271,21 @@ export class AppComponent implements OnInit{
       this.currentTimeImproductive++;
     }, 1000);
     this.isRunning = false;
+  } */
+
+  // Método para formatear segundos a HH:mm:ss
+  formatearTiempo(segundos: number): string {
+    const horas = Math.floor(segundos / 3600);
+    const minutos = Math.floor((segundos % 3600) / 60);
+    const segundosRestantes = segundos % 60;
+
+    return `${this.agregarCeros(horas)}:${this.agregarCeros(minutos)}:${this.agregarCeros(segundosRestantes)}`;
   }
 
-  formatTime(seconds: number): string {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-
-    const formattedHours = hours < 10 ? `0${hours}` : hours;
-    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-    const formattedSeconds = remainingSeconds < 10 ? `0${remainingSeconds}` : remainingSeconds;
-
-    return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
-  }
-
+  // Método para agregar ceros a los valores menores a 10
+  private agregarCeros(valor: number): string {
+    return valor < 10 ? `0${valor}` : `${valor}`;
+  }  
 
 
 

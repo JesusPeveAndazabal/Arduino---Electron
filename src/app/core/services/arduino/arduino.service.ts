@@ -66,18 +66,25 @@ export class ArduinoService {
   izquierdaActivada = false;
   derechaActivada = false;
 
+  isRunning: boolean = false;
+  
+  timerProductive: any;
+  currentTimeProductive: number = 0;
+
+  timerImproductive: any;
+  currentTimeImproductive: number = 0;
+
   inputPressureValue: number | undefined;
 
   
   private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
-  isRunning: boolean = false;
  
   constructor( private electronService: ElectronService , private databaseService : DatabaseService , private toastr : ToastrService) {
     this.setupSensorSubjects();
     
-    this.arduino1 = new ArduinoDevice("COM32",115200,true,electronService,this); //CAUDAL-VOLUMEN
-    this.arduino2 = new ArduinoDevice("COM35",115200,true,electronService,this);  //VALVULAS - PRESION
-    //this.arduino3 = new ArduinoDevice("COM11",115200,true,electronService,this);  //GPS - VELOCIDAD
+    this.arduino1 = new ArduinoDevice("COM30",115200,true,electronService,this); //CAUDAL-VOLUMEN
+    this.arduino2 = new ArduinoDevice("COM36",115200,true,electronService,this);  //VALVULAS - PRESION
+    this.arduino3 = new ArduinoDevice("COM29",115200,true,electronService,this);  //GPS - VELOCIDAD
   }
 
   inicializarContenedor(inicial: number, minimo: number): void {
@@ -167,6 +174,69 @@ export class ArduinoService {
       this.currentVolume = 0;
     }
 
+   
+    IniciarApp(valorWatterflow : number): void {
+      console.log("Ingreso a la funcion iniciarApp")
+      if (this.isRunning && valorWatterflow > 0) {
+        console.log("Ingreso a la condicion si es true la varibale isRunning")
+        this.resumeTimerProductive();
+        this.pauseTimerImproductive();
+        console.log("valor del caudal", valorWatterflow);
+      } else if(valorWatterflow <= 0){
+        console.log("Ingreso al else if si es false la variable y esta menos dee 0")
+        //this.isRunning = false;
+        this.resumeTimerImproductive();
+        this.pauseTimerProductive();
+      }
+    }
+
+      //Pausar tiempo productivo
+    pauseTimerProductive(): void {
+      clearInterval(this.timerProductive);
+    }
+
+    //Pausar tiempo Improductivo
+    pauseTimerImproductive(): void {
+      clearInterval(this.timerImproductive);
+    }
+
+    //Reanudar tiempo productivo
+    resumeTimerProductive(): void {
+      this.startTimerProductive();
+    }
+
+    //Reanudar tiempo Improductivo
+    resumeTimerImproductive(): void {
+      this.startTimerImproductive();
+    }
+
+    //Fucnion para tiempo productivo
+    startTimerProductive(): void {
+      console.log("Ingreso a la funcion de star time productive");
+      this.timerProductive = setInterval(() => {
+        this.currentTimeProductive++;
+      }, 1000);
+    }
+  
+    //Funcion para tiempo improductivo
+    startTimerImproductive(): void {
+      this.timerImproductive = setInterval(() => {
+        this.currentTimeImproductive++;
+      }, 1000);
+    }
+    
+    formatTime(seconds: number): string {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const remainingSeconds = seconds % 60;
+  
+      const formattedHours = hours < 10 ? `0${hours}` : hours;
+      const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+      const formattedSeconds = remainingSeconds < 10 ? `0${remainingSeconds}` : remainingSeconds;
+      console.log("Formato de formatTime" , `${formattedHours}:${formattedMinutes}:${formattedSeconds}`);
+      return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+    
+    }
   
     
     // Esta función se puede llamar cuando se detiene la aplicación para guardar el tiempo actual

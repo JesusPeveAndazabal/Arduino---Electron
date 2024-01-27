@@ -97,18 +97,17 @@
       </div>
 
       <div class="col-md-4">
-        <h6>Tiempo Productivo : {{ formatTime(currentTimeProductive) }}</h6>
-        <h6>Tiempo Improductivo : {{ formatTime(currentTimeImproductive) }}</h6>
-        <button (click)="IniciarApp()" style="border-radius: 50%;">
-          <ng-container *ngIf="isRunning; else encendidoTemplate">
-            <i class="fas fa-power-off on"></i> <!-- Apagado -->
-          </ng-container>
-          <ng-template #encendidoTemplate>
-            <i class="fas fa-power-off off"></i> <!-- Encendido -->
-          </ng-template>
+        <div>
+          <p>Cronómetro Productivo: {{ formatearTiempo(cronometroProductivo) }}</p>
+        </div>
+        <div>
+          <p>Cronómetro Improductivo: {{ formatearTiempo(cronometroImproductivo) }}</p>
+        </div>
+        <button (click)="toggleBotonEncendido()">
+          {{ botonEncendido ? 'Apagar' : 'Encender' }}
         </button>
-        <button (click)="resetTimerProductive()">Reset Productive</button>
-        <button (click)="resetTimerImproductive()">Reset Improductive</button>
+        <!-- <button (click)="resetTimerProductive()">Reset Productive</button>
+        <button (click)="resetTimerImproductive()">Reset Improductive</button> -->
       </div>
 
     </div>   
